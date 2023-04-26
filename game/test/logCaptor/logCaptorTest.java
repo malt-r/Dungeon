@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 
-@PrepareForTest({Entity.class, Logger.class})
 public class logCaptorTest {
     HealthComponent healthComponent;
     Entity testEntity;
