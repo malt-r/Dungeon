@@ -8,8 +8,8 @@ import graphic.Animation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
-import logging.CustomLogLevel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import semanticAnalysis.types.DSLContextMember;
 import semanticAnalysis.types.DSLType;
 import semanticAnalysis.types.DSLTypeMember;
@@ -26,7 +26,7 @@ public class HealthComponent extends Component {
     private @DSLTypeMember(name = "on_death_function") IOnDeathFunction onDeath;
     private @DSLTypeMember(name = "get_hit_animation") Animation getHitAnimation;
     private @DSLTypeMember(name = "die_animation") Animation dieAnimation;
-    private final Logger healthLogger = Logger.getLogger(this.getClass().getName());
+    private final Logger healthLogger = LogManager.getLogger(this.getClass().getName());
 
     /**
      * Creates a new HealthComponent
@@ -95,8 +95,7 @@ public class HealthComponent extends Component {
                         .mapToInt(Damage::damageAmount)
                         .sum();
 
-        healthLogger.log(
-                CustomLogLevel.DEBUG,
+        healthLogger.debug(
                 this.getClass().getSimpleName()
                         + " processed damage for entity '"
                         + entity.getClass().getSimpleName()
