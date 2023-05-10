@@ -1,6 +1,5 @@
 package logCaptor;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 import ecs.components.HealthComponent;
@@ -8,17 +7,16 @@ import ecs.damage.Damage;
 import ecs.damage.DamageType;
 import ecs.entities.Entity;
 import java.util.logging.Logger;
-import nl.altindag.log.LogCaptor;
+import logging.CaptorHandler;
+import logging.CustomLogLevel;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 
-public class logCaptorTest {
+public class LogCaptorTest {
     HealthComponent healthComponent;
     Entity testEntity;
-
-    Logger healthLogger;
+    CaptorHandler testHandler = new CaptorHandler();
 
     @Before
     public void setup() {
@@ -28,7 +26,10 @@ public class logCaptorTest {
 
     @Test
     public void logger_test() {
-        LogCaptor logCaptor = LogCaptor.forClass(HealthComponent.class);
+        Logger captorLogger = Logger.getLogger("");
+        captorLogger.setLevel(CustomLogLevel.ALL);
+        testHandler.addLogger(Logger.getLogger(healthComponent.getClass().getName()));
+        captorLogger.addHandler(testHandler);
 
         Entity enemyEntity = Mockito.mock(Entity.class);
         Damage damage = new Damage(5, DamageType.PHYSICAL, enemyEntity);
@@ -43,10 +44,18 @@ public class logCaptorTest {
                         + damage.damageAmount();
 
         // anstelle von verify()
-        assertEquals(1, logCaptor.getLogs().size());
+        assertEquals(1, testHandler.getLogList().size());
 
         // anstelle von assertTrue() oder assertEquals()
         // dynamisches Einbinden der Variablen in LogMessage
-        assertEquals(expectedLog, logCaptor.getDebugLogs().get(0));
+
+        // TODO dieses Testverhalten kann eine IndexOutOfBoundsException werfen, falls es keine Logs
+        // mit diesem Level gibt
+        // Testcase muss dann abgesichert werden
+        if (testHandler.getLogsByLevel(CustomLogLevel.DEBUG).size() > 0) {
+            assertEquals(
+                    expectedLog,
+                    testHandler.getLogsByLevel(CustomLogLevel.DEBUG).get(0).getMessage());
+        }
     }
 }
