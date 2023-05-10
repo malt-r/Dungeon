@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class CaptorHandler extends Handler {
     private final List<LogRecord> logList = new ArrayList<>();
-    private final Map<Integer, List<LogRecord>> logMap = new HashMap<>();
+    private final Map<CustomLogLevel, List<LogRecord>> logMap = new HashMap<>();
     private final List<Logger> monitoredLoggers = new ArrayList<>();
 
     public CaptorHandler() {}
@@ -45,7 +45,7 @@ public class CaptorHandler extends Handler {
     public void publish(LogRecord record) {
         for (Logger logger : monitoredLoggers) {
             if (logger.getName().equals(record.getLoggerName())) {
-                int level = record.getLevel().intValue();
+                CustomLogLevel level = (CustomLogLevel) record.getLevel();
                 logList.add(record);
 
                 List<LogRecord> logLevelList =
@@ -67,8 +67,8 @@ public class CaptorHandler extends Handler {
      * @return a List containing all logs of a specific log level
      */
     public List<LogRecord> getLogsByLevel(Level level) {
-        if (logMap.get(level.intValue()) != null) {
-            return logMap.get(level.intValue());
+        if (logMap.get((CustomLogLevel) level) != null) {
+            return logMap.get((CustomLogLevel) level);
         } else {
             return new ArrayList<>();
         }
