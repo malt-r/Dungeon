@@ -1,14 +1,5 @@
 package runtime;
 
-import contrib.components.AIComponent;
-import contrib.components.CollideComponent;
-
-import core.Entity;
-import core.components.PositionComponent;
-import core.components.VelocityComponent;
-
-import dslToGame.QuestConfig;
-
 import runtime.nativefunctions.NativePrint;
 
 import semanticanalysis.*;
@@ -153,28 +144,15 @@ public class GameEnvironment implements IEvironment {
 
         registerDefaultTypeAdapters();
 
-        var questConfigType = typeBuilder.createTypeFromClass(Scope.NULL, QuestConfig.class);
-        var entityComponentType = typeBuilder.createTypeFromClass(Scope.NULL, Entity.class);
-        var positionComponentType =
-                typeBuilder.createTypeFromClass(Scope.NULL, PositionComponent.class);
-        /* The DrawComponent was fundamentally refactort and the DSL is not yet updated.
-         * see https://github.com/Programmiermethoden/Dungeon/pull/687 for more information*/
-        // var animationComponentType =
-        //      typeBuilder.createTypeFromClass(Scope.NULL, DrawComponent.class);
-        var velocityComponentType =
-                typeBuilder.createTypeFromClass(Scope.NULL, VelocityComponent.class);
-        var aiComponentType = typeBuilder.createTypeFromClass(Scope.NULL, AIComponent.class);
-        var hitboxComponentType =
-                typeBuilder.createTypeFromClass(Scope.NULL, CollideComponent.class);
-        types.add(questConfigType);
-        types.add(entityComponentType);
-        types.add(positionComponentType);
-        /* The DrawComponent was fundamentally refactort and the DSL is not yet updated.
-         * see https://github.com/Programmiermethoden/Dungeon/pull/687 for more information*/
-        // types.add(animationComponentType);
-        types.add(velocityComponentType);
-        types.add(aiComponentType);
-        types.add(hitboxComponentType);
+        ComponentParser cParser = new ComponentParser();
+        List<Class<?>> componentClasses = cParser.parseComponents();
+
+        if (componentClasses != null && !componentClasses.isEmpty()) {
+            for (Class<?> compClass : componentClasses) {
+                var componentType = typeBuilder.createTypeFromClass(Scope.NULL, compClass);
+                types.add(componentType);
+            }
+        }
 
         return types;
     }
