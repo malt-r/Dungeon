@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class provides a method to parse all components in game/src/contrib and game/src/core if any
@@ -15,8 +17,8 @@ import java.util.List;
  */
 public class ComponentParser {
 
-    String contribPath = "../../../game/src/contrib";
-    String corePath = "../../../game/src/core";
+    String contribPath = "/home/lukas/Documents/Arbeit_Dungeon/Dungeon/game/src/contrib";
+    String corePath = "/home/lukas/Documents/Arbeit_Dungeon/Dungeon/game/src/core";
     String annotationName = "DSLType";
     List<File> foundFiles = new ArrayList<>();
     List<Class<?>> foundClasses = new ArrayList<>();
@@ -59,29 +61,18 @@ public class ComponentParser {
     }
 
     private boolean checkForDSLType(File file) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            StringBuilder codelines = new StringBuilder();
-
-            while ((line = reader.readLine()) != null) {
-                codelines.append(line).append(System.lineSeparator());
-            }
-
-            String code = codelines.toString();
-
-            return code.contains(annotationName);
-        } catch (IOException e) {
-            return false;
-        }
+        String code = readCodeFromFile(file);
+        assert code != null;
+        return code.contains(annotationName);
     }
 
     private void loadClasses() {
         if (!foundFiles.isEmpty()) {
             for (File file : foundFiles) {
                 try {
-                    String className = file.getName().replace(".java", "");
-                    Class<?> foundClass = Class.forName(className);
+
+                    String fullQualifiedName = getFullyQualifiedName(readCodeFromFile(file));
+                    Class<?> foundClass = Class.forName(fullQualifiedName);
 
                     if (foundClass.isAnnotationPresent(DSLType.class)) {
                         foundClasses.add(foundClass);
@@ -92,5 +83,52 @@ public class ComponentParser {
                 }
             }
         }
+    }
+
+    private String readCodeFromFile(File file) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            StringBuilder codelines = new StringBuilder();
+
+            while ((line = reader.readLine()) != null) {
+                codelines.append(line).append(System.lineSeparator());
+            }
+
+            return codelines.toString();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getFullyQualifiedName(String code) {
+        String packageName = extractPackageName(code);
+        String className = extractClassName(code);
+
+        if (packageName != null && className != null) {
+            return packageName + "." + className;
+        }
+
+        return null;
+    }
+
+    private String extractPackageName(String code) {
+        Pattern pattern = Pattern.compile("package\\s+([\\w.]+);");
+        Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    private String extractClassName(String code) {
+        Pattern pattern = Pattern.compile("class\\s+([\\w$]+)");
+        Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 }
