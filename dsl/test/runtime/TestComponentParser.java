@@ -12,6 +12,7 @@ public class TestComponentParser {
         List<Class<?>> testList = cParser.parseComponents();
 
         assert testList.size() > 0;
+        assert testList.size() == 7; // current static amount of found classes
 
     }
 }
