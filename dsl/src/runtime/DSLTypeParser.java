@@ -15,10 +15,11 @@ import java.util.regex.Pattern;
  * This class provides a method to parse all components in game/src/contrib and game/src/core if any
  * part of it is annotated with the @DSLType Annotation
  */
-public class ComponentParser {
+public class DSLTypeParser {
 
     String contribPath = "game/src/contrib";
     String corePath = "game/src/core";
+    String dslToGamePath = "dungeon/src/dslToGame";
     String annotationName = "DSLType";
     List<File> foundFiles = new ArrayList<>();
     List<Class<?>> foundClasses = new ArrayList<>();
@@ -31,9 +32,11 @@ public class ComponentParser {
     public List<Class<?>> parseComponents() {
         File contribDirectory = new File(contribPath);
         File coreDirectory = new File(corePath);
+        File dslToGameDirectory = new File(dslToGamePath);
 
         findFiles(contribDirectory);
         findFiles(coreDirectory);
+        findFiles(dslToGameDirectory);
 
         loadClasses();
 
@@ -126,6 +129,11 @@ public class ComponentParser {
     private String extractClassName(String code) {
         Pattern pattern = Pattern.compile("class\\s+([\\w$]+)");
         Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        pattern = Pattern.compile("record\\s+([\\w$]+)");
+        matcher = pattern.matcher(code);
         if (matcher.find()) {
             return matcher.group(1);
         }

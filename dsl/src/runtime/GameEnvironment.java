@@ -144,7 +144,7 @@ public class GameEnvironment implements IEvironment {
 
         registerDefaultTypeAdapters();
 
-        ComponentParser cParser = new ComponentParser();
+        DSLTypeParser cParser = new DSLTypeParser();
         List<Class<?>> componentClasses = cParser.parseComponents();
 
         if (componentClasses != null && !componentClasses.isEmpty()) {
