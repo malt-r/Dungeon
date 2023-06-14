@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
  */
 public class ComponentParser {
 
-    String contribPath = "/home/lukas/Documents/Arbeit_Dungeon/Dungeon/game/src/contrib";
-    String corePath = "/home/lukas/Documents/Arbeit_Dungeon/Dungeon/game/src/core";
+    String contribPath = "game/src/contrib";
+    String corePath = "game/src/core";
     String annotationName = "DSLType";
     List<File> foundFiles = new ArrayList<>();
     List<Class<?>> foundClasses = new ArrayList<>();
