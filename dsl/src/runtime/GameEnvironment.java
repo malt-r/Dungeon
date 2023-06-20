@@ -4,6 +4,7 @@ import runtime.nativefunctions.NativePrint;
 
 import semanticanalysis.*;
 import semanticanalysis.types.BuiltInType;
+import semanticanalysis.types.DSLType;
 import semanticanalysis.types.IType;
 import semanticanalysis.types.TypeBuilder;
 
@@ -145,7 +146,7 @@ public class GameEnvironment implements IEvironment {
         registerDefaultTypeAdapters();
 
         DSLTypeParser cParser = new DSLTypeParser();
-        List<Class<?>> componentClasses = cParser.parseComponents();
+        List<Class<?>> componentClasses = cParser.parseComponents(DSLType.class);
 
         if (componentClasses != null && !componentClasses.isEmpty()) {
             for (Class<?> compClass : componentClasses) {

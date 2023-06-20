@@ -29,7 +29,7 @@ public class DSLTypeParser {
      *
      * @return List of all found classes
      */
-    public List<Class<?>> parseComponents() {
+    public List<Class<?>> parseComponents(Class annotationClass) {
         File contribDirectory = new File(contribPath);
         File coreDirectory = new File(corePath);
         File dslToGameDirectory = new File(dslToGamePath);
@@ -38,7 +38,7 @@ public class DSLTypeParser {
         findFiles(coreDirectory);
         findFiles(dslToGameDirectory);
 
-        loadClasses();
+        loadClasses(annotationClass);
 
         return foundClasses;
     }
@@ -69,7 +69,7 @@ public class DSLTypeParser {
         return code.contains(annotationName);
     }
 
-    private void loadClasses() {
+    private void loadClasses(Class annotationClass) {
         if (!foundFiles.isEmpty()) {
             for (File file : foundFiles) {
                 try {
@@ -77,7 +77,7 @@ public class DSLTypeParser {
                     String fullQualifiedName = getFullyQualifiedName(readCodeFromFile(file));
                     Class<?> foundClass = Class.forName(fullQualifiedName);
 
-                    if (foundClass.isAnnotationPresent(DSLType.class)) {
+                    if (foundClass.isAnnotationPresent(annotationClass)) {
                         foundClasses.add(foundClass);
                     }
 
