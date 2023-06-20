@@ -20,7 +20,7 @@ public class DSLTypeParser {
     String contribPath = "game/src/contrib";
     String corePath = "game/src/core";
     String dslToGamePath = "dungeon/src/dslToGame";
-    String annotationName = "DSLType";
+    String annotationName;
     List<File> foundFiles = new ArrayList<>();
     List<Class<?>> foundClasses = new ArrayList<>();
 
@@ -30,6 +30,8 @@ public class DSLTypeParser {
      * @return List of all found classes
      */
     public List<Class<?>> parseComponents(Class annotationClass) {
+        annotationName = annotationClass.getSimpleName();
+
         File contribDirectory = new File(contribPath);
         File coreDirectory = new File(corePath);
         File dslToGameDirectory = new File(dslToGamePath);
