@@ -7,6 +7,7 @@ import contrib.utils.components.interaction.InteractionTool;
 import contrib.utils.components.item.ItemData;
 import contrib.utils.components.item.ItemDataGenerator;
 import contrib.utils.components.skill.FireballSkill;
+import contrib.utils.components.skill.MeleeAttackSkill;
 import contrib.utils.components.skill.Skill;
 import contrib.utils.components.skill.SkillTools;
 
@@ -38,6 +39,7 @@ public class EntityFactory {
     private static final float X_SPEED_HERO = 0.3f;
     private static final float Y_SPEED_HERO = 0.3f;
     private static final int FIREBALL_COOL_DOWN = 2;
+    private static final int MELEE_COOLDOWN = 1;
     private static final String[] MONSTER_FILE_PATHS = {
         "character/monster/chort", "character/monster/imp"
     };
@@ -73,6 +75,8 @@ public class EntityFactory {
         PlayerComponent pc = new PlayerComponent(hero);
         Skill fireball =
                 new Skill(new FireballSkill(SkillTools::cursorPositionAsPoint), FIREBALL_COOL_DOWN);
+        Skill melee =
+                new Skill(new MeleeAttackSkill(SkillTools::cursorPositionAsPoint), MELEE_COOLDOWN);
 
         // hero movement
         pc.registerCallback(
