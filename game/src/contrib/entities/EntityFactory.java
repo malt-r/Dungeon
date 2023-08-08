@@ -133,7 +133,8 @@ public class EntityFactory {
                 false);
 
         // skills
-        pc.registerCallback(KeyboardConfig.FIRST_SKILL.value(), fireball::execute);
+        pc.registerCallback(KeyboardConfig.FIRST_SKILL.value(), melee::execute);
+        pc.registerCallback(KeyboardConfig.SECOND_SKILL.value(), fireball::execute);
 
         return hero;
     }
