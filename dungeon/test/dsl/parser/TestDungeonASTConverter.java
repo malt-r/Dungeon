@@ -1125,4 +1125,57 @@ public class TestDungeonASTConverter {
         Assert.assertEquals("seq", attrNode.getRhsIdName());
         Assert.assertEquals(TaskEdge.Type.sequence, attrNode.getDependencyType());
     }
+
+    @Test
+    public void testImportStmtUnnamed() {
+
+        String program = """
+            #import "hello.dng":moin
+            """;
+
+        var ast = Helpers.getASTFromString(program);
+        var unnamedImportStmt = ast.getChild(0);
+        Assert.assertEquals(Node.Type.ImportNode, unnamedImportStmt.type);
+        ImportNode unnamedImportNode = (ImportNode) unnamedImportStmt;
+        Assert.assertEquals(ImportNode.Type.unnamed, unnamedImportNode.importType());
+
+        var pathNode = unnamedImportNode.pathNode();
+        Assert.assertEquals(Node.Type.StringLiteral, pathNode.type);
+        StringNode stringNode = (StringNode) pathNode;
+        Assert.assertEquals("hello.dng", stringNode.getValue());
+
+        var idChild = unnamedImportNode.idNode();
+        Assert.assertEquals(Node.Type.Identifier, idChild.type);
+        IdNode idNode = (IdNode) idChild;
+        Assert.assertEquals("moin", idNode.getName());
+    }
+
+    @Test
+    public void testImportStmtNamed() {
+
+        String program = """
+            #import "hello.dng":kuckuck as no
+            """;
+
+        var ast = Helpers.getASTFromString(program);
+        var namedImportStmt = ast.getChild(0);
+        Assert.assertEquals(Node.Type.ImportNode, namedImportStmt.type);
+        ImportNode namedImportNode = (ImportNode) namedImportStmt;
+        Assert.assertEquals(ImportNode.Type.named, namedImportNode.importType());
+
+        var pathNode = namedImportNode.pathNode();
+        Assert.assertEquals(Node.Type.StringLiteral, pathNode.type);
+        StringNode stringNode = (StringNode) pathNode;
+        Assert.assertEquals("hello.dng", stringNode.getValue());
+
+        var idChild = namedImportNode.idNode();
+        Assert.assertEquals(Node.Type.Identifier, idChild.type);
+        IdNode idNode = (IdNode) idChild;
+        Assert.assertEquals("kuckuck", idNode.getName());
+
+        var asIdChild = namedImportNode.asIdNode();
+        Assert.assertEquals(Node.Type.Identifier, asIdChild.type);
+        IdNode asIdNode = (IdNode) asIdChild;
+        Assert.assertEquals("no", asIdNode.getName());
+    }
 }
