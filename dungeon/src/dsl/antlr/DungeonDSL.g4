@@ -46,11 +46,17 @@ program : definition* EOF
 
 definition
         : dot_def
+        | import_def
         | object_def
         | entity_type_def
         | item_type_def
         | fn_def
         ;
+
+import_def
+    : '#import' path=STRING_LITERAL ':' sym_id=ID                   #import_unnamed
+    | '#import' path=STRING_LITERAL ':' sym_id=ID 'as' sym_name=ID  #import_named
+    ;
 
 fn_def
     : 'fn' ID '(' param_def_list? ')' ret_type_def? stmt_block
