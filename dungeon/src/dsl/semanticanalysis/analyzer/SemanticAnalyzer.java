@@ -85,6 +85,8 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
      *
      * @return the bottom of the scopeStack
      */
+    // TODO: needs to be modified/assessed -> when is the global scope really needed and
+    //  when is the current scope / file scope adequate
     private IScope globalScope() {
         return scopeStack.get(0);
     }
@@ -185,7 +187,6 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
             scope = fs;
         }
 
-        // TODO: push the scope on scope stack
         this.scopeStack.push(scope);
 
         Node node = file.rootASTNode();
@@ -223,18 +224,19 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     public Void visit(Node node) {
         switch (node.type) {
             case Program:
+                IScope topMostScope = this.scopeStack.peek();
                 // bind all type definitions
                 TypeBinder tb = new TypeBinder();
-                tb.bindTypes(environment, node, errorStringBuilder);
+                tb.bindTypes(environment, topMostScope, node, errorStringBuilder);
 
                 // bind all object definitions / variable assignments to enable object
                 // references before
                 // definition
                 VariableBinder vb = new VariableBinder();
-                vb.bindVariables(symbolTable, globalScope(), node, errorStringBuilder);
+                vb.bindVariables(symbolTable, topMostScope, node, errorStringBuilder);
 
                 FunctionDefinitionBinder fdb = new FunctionDefinitionBinder();
-                fdb.bindFunctionDefinitions(symbolTable, node);
+                fdb.bindFunctionDefinitions(symbolTable, topMostScope, node);
 
                 visitChildren(node);
 
@@ -436,6 +438,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     @Override
     public Void visit(FuncDefNode node) {
         var funcName = node.getIdName();
+        // TODO: current scope
         Symbol resolved = globalScope().resolve(funcName);
         if (resolved == Symbol.NULL) {
             errorStringBuilder.append(
@@ -700,6 +703,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
         return variableSymbol;
     }
 
+    // TODO: make sure, that currentScope is passed to this
     private Symbol createVariableSymbolInScope(IdNode typeIdNode, IdNode nameIdNode, IScope scope) {
         // resolve the type name
         String typeName = typeIdNode.getName();

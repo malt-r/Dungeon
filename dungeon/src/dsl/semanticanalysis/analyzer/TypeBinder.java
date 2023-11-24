@@ -11,10 +11,12 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.*;
 public class TypeBinder implements AstVisitor<Object> {
 
     private StringBuilder errorStringBuilder;
-    private IEnvironment environment;
+    //private IEnvironment environment;
+    private IScope scope;
+    private SymbolTable symbolTable;
 
     private SymbolTable symbolTable() {
-        return this.environment.getSymbolTable();
+        return this.symbolTable;
     }
 
     /**
@@ -26,8 +28,10 @@ public class TypeBinder implements AstVisitor<Object> {
      * @param errorStringBuilder a string builder to which errors will be appended
      */
     public void bindTypes(
-            IEnvironment environment, Node rootNode, StringBuilder errorStringBuilder) {
-        this.environment = environment;
+            IEnvironment environment, IScope scope, Node rootNode, StringBuilder errorStringBuilder) {
+        //this.environment = environment;
+        this.symbolTable = environment.getSymbolTable();
+        this.scope = scope;
         this.errorStringBuilder = errorStringBuilder;
         visitChildren(rootNode);
     }
@@ -64,7 +68,8 @@ public class TypeBinder implements AstVisitor<Object> {
             }
         }
 
-        this.environment.loadTypes(newType);
+        //this.environment.loadTypes(newType);
+        this.scope.bind(newType);
         return newType;
     }
 
@@ -83,7 +88,7 @@ public class TypeBinder implements AstVisitor<Object> {
         var itemType = new AggregateType(newTypeName, this.symbolTable().globalScope());
         symbolTable().addSymbolNodeRelation(itemType, node, true);
 
-        Symbol questItemTypeSymbol = this.environment.resolveInGlobalScope("quest_item");
+        Symbol questItemTypeSymbol = this.scope.resolve("quest_item");
         if (Symbol.NULL == questItemTypeSymbol) {
             throw new RuntimeException("'quest_item' cannot be resolved in global scope!");
         }
@@ -117,7 +122,8 @@ public class TypeBinder implements AstVisitor<Object> {
             symbolTable().addSymbolNodeRelation(memberSymbol, propertyDefinitionNode, true);
         }
 
-        this.environment.loadTypes(itemType);
+        //this.environment.loadTypes(itemType);
+        this.scope.bind(itemType);
         return itemType;
     }
 
