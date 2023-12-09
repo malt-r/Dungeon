@@ -423,7 +423,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
             Symbol funcSymbol = this.symbolTable.getSymbolsForAstNode(node).get(0);
             if (funcSymbol == Symbol.NULL) {
                 String funcName = node.getIdName();
-                funcSymbol = currentScope().resolve(funcName, true);
+                funcSymbol = resolve(funcName);
                 if (funcSymbol.equals(Symbol.NULL)) {
                     throw new RuntimeException(
                             "Function with name " + funcName + " could not be resolved!");
@@ -448,7 +448,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     public Void visit(FuncDefNode node) {
         var funcName = node.getIdName();
         // TODO: current scope
-        Symbol resolved = globalScope().resolve(funcName);
+        Symbol resolved = resolve(funcName);
         if (resolved == Symbol.NULL) {
             errorStringBuilder.append(
                     "Could not resolve Identifier with name " + funcName + " in global scope!");

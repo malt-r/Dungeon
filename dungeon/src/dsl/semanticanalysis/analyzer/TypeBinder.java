@@ -44,14 +44,14 @@ public class TypeBinder implements AstVisitor<Object> {
     public Object visit(PrototypeDefinitionNode node) {
         // create new type with name of definition node
         var newTypeName = node.getIdName();
-        if (resolveGlobal(newTypeName) != Symbol.NULL) {
+        if (this.scope.resolve(newTypeName) != Symbol.NULL) {
             // TODO: reference file and location of definition
             this.errorStringBuilder.append(
                     "Symbol with name '" + newTypeName + "' already defined");
             // TODO: return explicit null-Type?
             return null;
         }
-        var newType = new AggregateType(newTypeName, this.symbolTable().globalScope());
+        var newType = new AggregateType(newTypeName, this.scope);
         symbolTable().addSymbolNodeRelation(newType, node, true);
 
         // visit all component definitions and get type and create new symbol in gameObject type
@@ -68,7 +68,6 @@ public class TypeBinder implements AstVisitor<Object> {
             }
         }
 
-        //this.environment.loadTypes(newType);
         this.scope.bind(newType);
         return newType;
     }

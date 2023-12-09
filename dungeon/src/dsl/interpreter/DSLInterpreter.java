@@ -155,9 +155,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @param environment the {@link IEnvironment} in which's global scope to search for prototype
      *     definitions.
      */
-    public void createPrototypes(IEnvironment environment) {
-        createGameObjectPrototypes(environment);
-        createItemPrototypes(environment);
+    public void createPrototypes(IEnvironment environment, IScope scope) {
+        createGameObjectPrototypes(environment, scope);
+        createItemPrototypes(environment, scope);
     }
 
     /**
@@ -166,9 +166,12 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *
      * @param environment the environment to check for game object definitions
      */
-    public void createGameObjectPrototypes(IEnvironment environment) {
+    public void createGameObjectPrototypes(IEnvironment environment, IScope scope) {
+        // TODO: needs to be scoped...
+
         // iterate over all types
-        for (var type : environment.getTypes()) {
+        var types = scope.getSymbols().stream().filter(s -> s instanceof IType).map(s -> (IType)s).toList();
+        for (var type : types) {
             if (type.getTypeKind().equals(IType.Kind.Aggregate)) {
                 // if the type has a creation node, it is user defined, and we need to
                 // create a prototype for it
@@ -185,8 +188,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
                         var componentPrototype = createComponentPrototype(compDefNode);
                         prototype.addDefaultValue(compDefNode.getIdName(), componentPrototype);
                     }
-                    this.environment.addPrototype(prototype);
-                    this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
+                    // needs to be added to file-memoryspace, not the environment
+                    //this.environment.addPrototype(prototype);
+                    // TODO: needs to use current file-memoryspace
+                    this.getCurrentMemorySpace().bindValue(prototype.getName(), prototype);
+                    //this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
                 }
             }
         }
@@ -200,9 +206,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *
      * @param environment the {@link IEnvironment} to search for item prototype definitions
      */
-    public void createItemPrototypes(IEnvironment environment) {
+    public void createItemPrototypes(IEnvironment environment, IScope scope) {
         // iterate over all types
-        for (var type : environment.getTypes()) {
+        var types = scope.getSymbols().stream().filter(s -> s instanceof IType).map(s -> (IType)s).toList();
+        for (var type : types) {
             if (type.getTypeKind().equals(IType.Kind.Aggregate)) {
                 // if the type has a creation node, it is user defined, and we need to
                 // create a prototype for it
@@ -211,8 +218,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
                     var prototype =
                             createItemPrototype((ItemPrototypeDefinitionNode) creationAstNode);
 
-                    this.environment.addPrototype(prototype);
-                    this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
+                    //this.environment.addPrototype(prototype);
+                    // this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
+                    this.getCurrentMemorySpace().bindValue(prototype.getName(), prototype);
                 }
             }
         }
@@ -572,7 +580,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         IScope fs = this.environment.getFileScope(parsedFile.filePath());
         evaluateGlobalSymbolsOfScope(fs);
 
-        createPrototypes(this.environment);
+        createPrototypes(this.environment, fs);
 
         // find quest_config definition
         for (var node : programAST.getChildren()) {
@@ -588,7 +596,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
     }
 
     protected DungeonConfig generateQuestConfig(ObjectDefNode configDefinitionNode) {
-        createPrototypes(this.environment);
+        // TODO: this is for testing
+        IScope globalScope = this.environment.getGlobalScope();
+        createPrototypes(this.environment, globalScope);
         Value configValue = (Value) configDefinitionNode.accept(this);
         Object config = configValue.getInternalValue();
         if (config instanceof DungeonConfig) {
@@ -688,7 +698,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
     //
     @Override
     public Object visit(PrototypeDefinitionNode node) {
-        return this.environment.lookupPrototype(node.getIdName());
+        // TODO: does this need to be specially treated? could this not be the normal resolving of types?
+        //return this.environment.lookupPrototype(node.getIdName());
+        boolean b = true;
+        return this.getCurrentMemorySpace().resolve(node.getIdName());
     }
 
     public Object instantiateRuntimeValue(AggregateValue dslValue, AggregateType asType) {
