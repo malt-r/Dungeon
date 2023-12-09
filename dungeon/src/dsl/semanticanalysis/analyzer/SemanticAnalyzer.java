@@ -49,6 +49,11 @@ import java.util.Stack;
 public class SemanticAnalyzer implements AstVisitor<Void> {
     private SymbolTable symbolTable;
     private IEnvironment environment;
+
+    // TODO: this is just for testing and will be set to the NULL-File created in
+    //  this.walk in order to reconstruct the status quo while working on implementation of
+    //  multifile
+    public ParsedFile latestParsedFile = null;
     Stack<IScope> scopeStack = new Stack<>();
     StringBuilder errorStringBuilder = new StringBuilder();
     private boolean setup = false;
@@ -210,6 +215,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
         }
 
         ParsedFile pf = new ParsedFile(null, node);
+        latestParsedFile = pf;
         FileScope fs = new FileScope(pf, this.globalScope());
         this.environment.addFileScope(fs);
 
@@ -217,6 +223,8 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
         node.accept(this);
         this.scopeStack.pop();
 
+        // TODO: got a feeling, this should also return the file scope -> otherwise it won't be
+        //  accessed afterwards by the DSLInterpreter, i guess
         return new Result(symbolTable, errorStringBuilder.toString());
     }
 
@@ -379,7 +387,8 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     public Void visit(ObjectDefNode node) {
         // resolve the type of the object definition and push it on the stack
         var typeName = node.getTypeSpecifierName();
-        var typeSymbol = globalScope().resolve(typeName);
+        // TODO: this should be revised to be the current scope
+        var typeSymbol = this.currentScope().resolve(typeName);
 
         // TODO: errorhandling
         if (typeSymbol == Symbol.NULL) {

@@ -175,7 +175,7 @@ public class TestTypeBinder {
         symTableParser.setup(env);
 
         TypeBinder typeBinder = new TypeBinder();
-        typeBinder.bindTypes(env, ast, new StringBuilder());
+        typeBinder.bindTypes(env, env.getGlobalScope(), ast, new StringBuilder());
         SymbolTable symTable = env.getSymbolTable();
 
         IScope globalScope = symTable.globalScope();

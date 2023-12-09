@@ -216,6 +216,11 @@ public class GameEnvironment implements IEnvironment {
     }
 
     @Override
+    public HashMap<Path, FileScope> getFileScopes() {
+        return this.fileScopes;
+    }
+
+    @Override
     public Symbol[] getFunctions() {
         var funcArray = new Symbol[NATIVE_FUNCTIONS.size() + loadedFunctions.size()];
         var combinedList = new ArrayList<Symbol>();

@@ -32,6 +32,7 @@ import dslinterop.dslnativefunction.NativeInstantiate;
 
 import entrypoint.DungeonConfig;
 
+import entrypoint.ParsedFile;
 import graph.taskdependencygraph.TaskDependencyGraph;
 import graph.taskdependencygraph.TaskEdge;
 import graph.taskdependencygraph.TaskNode;
@@ -91,6 +92,7 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
         interpreter.initializeRuntime(env);
@@ -99,7 +101,7 @@ public class TestDSLInterpreter {
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, latestParsedFile);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
     }
@@ -125,6 +127,7 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
         interpreter.initializeRuntime(env);
@@ -133,7 +136,7 @@ public class TestDSLInterpreter {
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, pf);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
     }
@@ -160,6 +163,7 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
         interpreter.initializeRuntime(env);
@@ -168,7 +172,7 @@ public class TestDSLInterpreter {
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, pf);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
         assertFalse(outputStream.toString().contains("Moin"));

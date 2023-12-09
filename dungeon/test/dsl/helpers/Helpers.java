@@ -14,6 +14,7 @@ import dsl.semanticanalysis.environment.IEnvironment;
 import dsl.semanticanalysis.symbol.ScopedSymbol;
 import dsl.semanticanalysis.symbol.Symbol;
 
+import entrypoint.ParsedFile;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -144,9 +145,10 @@ public class Helpers {
         symbolTableParser.setup(environment);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
         interpreter.initializeRuntime(environment);
-        Value questConfigValue = (Value) interpreter.generateQuestConfig(ast);
+        Value questConfigValue = (Value) interpreter.generateQuestConfig(ast, latestParsedFile);
         return questConfigValue.getInternalValue();
     }
 
@@ -169,9 +171,10 @@ public class Helpers {
         symbolTableParser.setup(environment);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
         interpreter.initializeRuntime(environment);
 
-        return interpreter.generateQuestConfig(ast);
+        return interpreter.generateQuestConfig(ast, latestParsedFile);
     }
 }

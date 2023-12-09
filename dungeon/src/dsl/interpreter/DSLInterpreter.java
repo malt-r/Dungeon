@@ -412,20 +412,22 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         this.environment = new RuntimeEnvironment(environment, this);
 
-        evaluateGlobalSymbols();
+        evaluateGlobalSymbolsOfScope(this.environment.getGlobalScope());
         initializeScenarioBuilderStorage();
 
         scanScopeForScenarioBuilders(this.environment.getGlobalScope());
     }
 
-    private void evaluateGlobalSymbols() {
+    private void evaluateGlobalSymbolsOfScope(IScope scope) {
         // bind all function definition and object definition symbols to values
         // in global memorySpace
 
         // TODO: this should potentially done on a file basis, not globally for the whole
         //  DSLInterpreter; should define a file-scope...
+
+        // TODO: don't put everything in globalValues.. where does this even go?
         HashMap<Symbol, Value> globalValues = new HashMap<>();
-        List<Symbol> globalSymbols = symbolTable().globalScope().getSymbols();
+        List<Symbol> globalSymbols = scope.getSymbols();
         for (var symbol : globalSymbols) {
             IType type = symbol.getDataType();
             if (type != null && type.getTypeKind().equals(IType.Kind.FunctionType)) {
@@ -550,10 +552,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
         semanticAnalyzer.setup(environment);
         var result = semanticAnalyzer.walk(programAST);
+        ParsedFile pf = semanticAnalyzer.latestParsedFile;
 
         initializeRuntime(environment);
 
-        Value questConfigValue = (Value) generateQuestConfig(programAST);
+        Value questConfigValue = (Value) generateQuestConfig(programAST, pf);
         return questConfigValue.getInternalValue();
     }
 
@@ -564,7 +567,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *     {@link IEnvironment} used by the DSLInterpreter (set by {@link
      *     #initializeRuntime(IEnvironment)})
      */
-    public Object generateQuestConfig(Node programAST) {
+    public Object generateQuestConfig(Node programAST, ParsedFile parsedFile) {
+        // TODO: this needs to accomodate for file scopes!
+        IScope fs = this.environment.getFileScope(parsedFile.filePath());
+        evaluateGlobalSymbolsOfScope(fs);
+
         createPrototypes(this.environment);
 
         // find quest_config definition

@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface IEnvironment {
 
@@ -39,6 +40,8 @@ public interface IEnvironment {
     void addFileScope(FileScope fileScope);
 
     IScope getFileScope(Path file);
+
+    HashMap<Path, FileScope> getFileScopes();
 
     /**
      * @return all available function definitions
