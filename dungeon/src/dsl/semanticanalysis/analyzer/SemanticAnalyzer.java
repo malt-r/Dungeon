@@ -292,7 +292,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     public Void visit(ItemPrototypeDefinitionNode node) {
         // resolve datatype of definition
         var typeName = node.getIdName();
-        var typeSymbol = this.globalScope().resolve(typeName);
+        var typeSymbol = currentScope().resolve(typeName);
         if (typeSymbol.equals(Symbol.NULL) || typeSymbol == null) {
             errorStringBuilder.append("Could not resolve type " + typeName);
         } else {
@@ -309,7 +309,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     public Void visit(PrototypeDefinitionNode node) {
         // resolve datatype of definition
         var typeName = node.getIdName();
-        var typeSymbol = this.globalScope().resolve(typeName);
+        var typeSymbol = this.currentScope().resolve(typeName);
         if (typeSymbol.equals(Symbol.NULL) || typeSymbol == null) {
             errorStringBuilder.append("Could not resolve type " + typeName);
         } else {
