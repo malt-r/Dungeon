@@ -131,7 +131,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         // at this point, all the symbolic and semantic data must be present in the environment
         initializeRuntime(environment);
 
-        return generateQuestConfig(entryPoint.configDefinitionNode());
+        return generateQuestConfig(entryPoint.configDefinitionNode(), entryPoint.file());
     }
 
     /**
@@ -578,8 +578,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
     public Object generateQuestConfig(Node programAST, ParsedFile parsedFile) {
         // TODO: this needs to accomodate for file scopes!
         IScope fs = this.environment.getFileScope(parsedFile.filePath());
-        evaluateGlobalSymbolsOfScope(fs);
 
+        evaluateGlobalSymbolsOfScope(fs);
         createPrototypes(this.environment, fs);
 
         // find quest_config definition
@@ -595,10 +595,14 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return Value.NONE;
     }
 
-    protected DungeonConfig generateQuestConfig(ObjectDefNode configDefinitionNode) {
+    protected DungeonConfig generateQuestConfig(ObjectDefNode configDefinitionNode, ParsedFile pf) {
         // TODO: this is for testing
-        IScope globalScope = this.environment.getGlobalScope();
-        createPrototypes(this.environment, globalScope);
+        //IScope globalScope = this.environment.getGlobalScope();
+        IScope fs = this.environment.getFileScope(pf.filePath());
+
+        evaluateGlobalSymbolsOfScope(fs);
+        createPrototypes(this.environment, fs);
+
         Value configValue = (Value) configDefinitionNode.accept(this);
         Object config = configValue.getInternalValue();
         if (config instanceof DungeonConfig) {

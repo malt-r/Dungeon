@@ -49,15 +49,16 @@ public class TestTypeBinder {
         symTableParser.setup(env);
 
         SymbolTable symbolTable = symTableParser.walk(ast).symbolTable;
+        var fileScope = env.getFileScope(null);
 
         // test, that type 'o' was correctly bound in global scope
-        var gameObjectDefinition = symbolTable.globalScope.resolve("o");
+        var gameObjectDefinition = fileScope.resolve("o");
         Assert.assertNotSame(Symbol.NULL, gameObjectDefinition);
         Assert.assertTrue(gameObjectDefinition instanceof AggregateType);
 
         var testComponent = ((AggregateType) gameObjectDefinition).resolve("test_component");
         Assert.assertNotSame(Symbol.NULL, testComponent);
-        var testComponentDataType = symbolTable.globalScope.resolve("test_component");
+        var testComponentDataType = fileScope.resolve("test_component");
         Assert.assertEquals(testComponentDataType, testComponent.getDataType());
 
         var member1 = ((AggregateType) testComponentDataType).resolve("member1");
@@ -91,9 +92,10 @@ public class TestTypeBinder {
         symTableParser.setup(env);
 
         SymbolTable symbolTable = symTableParser.walk(ast).symbolTable;
+        var fileScope = env.getFileScope(null);
 
         // check, that the creation node of the datatype matches the AST node
-        var gameObjectDefinition = symbolTable.globalScope.resolve("o");
+        var gameObjectDefinition = fileScope.resolve("o");
         var gameObjectDefNode = symbolTable.getCreationAstNode(gameObjectDefinition);
         var gameObjectDefNodeFromAST = ast.getChild(0);
         Assert.assertEquals(gameObjectDefNodeFromAST, gameObjectDefNode);
@@ -134,8 +136,9 @@ public class TestTypeBinder {
         symTableParser.setup(env);
 
         SymbolTable symbolTable = symTableParser.walk(ast).symbolTable;
+        var fileScope = env.getFileScope(null);
 
-        var gameObjectDefinition = symbolTable.globalScope.resolve("o");
+        var gameObjectDefinition = fileScope.resolve("o");
         var testRecordUser = ((AggregateType) gameObjectDefinition).resolve("test_record_user");
         var testRecordUserType = (AggregateType) testRecordUser.getDataType();
         var member = testRecordUserType.resolve("component_member");

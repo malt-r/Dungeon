@@ -349,9 +349,7 @@ public class TestDSLInterpreter {
         Helpers.generateQuestConfigWithCustomTypes(
                 program, env, interpreter, TestComponent.class, OtherComponent.class);
 
-        var rtEnv = interpreter.getRuntimeEnvironment();
-
-        var typeWithDefaults = rtEnv.lookupPrototype("c");
+        var typeWithDefaults = (PrototypeValue)interpreter.getCurrentMemorySpace().resolve("c");
         assertNotEquals(PrototypeValue.NONE, typeWithDefaults);
 
         var firstCompWithDefaults = typeWithDefaults.getDefaultValue("test_component");
@@ -2616,8 +2614,10 @@ public class TestDSLInterpreter {
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
 
+        var fileScope = runtimeEnvironment.getFileScope(null);
+
         FunctionSymbol fnSym =
-                (FunctionSymbol) runtimeEnvironment.getGlobalScope().resolve("test_func");
+                (FunctionSymbol) fileScope.resolve("test_func");
         interpreter.executeUserDefinedFunctionRawParameters(
                 fnSym, Arrays.stream(new Object[] {entity}).toList());
 
