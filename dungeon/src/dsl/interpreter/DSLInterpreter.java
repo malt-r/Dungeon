@@ -432,7 +432,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         this.environment = new RuntimeEnvironment(environment, this);
 
+        // TODO: this should be obsolete, because it is done on a file basis in initializeFileMemorySpace
         evaluateGlobalSymbolsOfScope(this.environment.getGlobalScope());
+
         initializeScenarioBuilderStorage();
 
         // scan for scenario builders in scenario lib files
@@ -443,7 +445,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             IScope fileScope = this.environment.getFileScope(scenarioFile);
             scanScopeForScenarioBuilders(fileScope);
         }
-        // TODO: also add scope of passed main  .dng
+        // TODO: also add scope of passed main  .dng, until then, tests probably fail
         //scanScopeForScenarioBuilders(this.environment.getGlobalScope());
     }
 
