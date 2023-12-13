@@ -19,6 +19,7 @@ import dsl.semanticanalysis.environment.GameEnvironment;
 import dsl.semanticanalysis.environment.IEnvironment;
 import dsl.semanticanalysis.scope.FileScope;
 import dsl.semanticanalysis.scope.IScope;
+import dsl.semanticanalysis.scope.Scope;
 import dsl.semanticanalysis.symbol.FunctionSymbol;
 import dsl.semanticanalysis.symbol.PropertySymbol;
 import dsl.semanticanalysis.symbol.ScopedSymbol;
@@ -56,6 +57,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
     private RuntimeEnvironment environment;
     private final ArrayDeque<IMemorySpace> memoryStack;
     private final ArrayDeque<IMemorySpace> instanceMemoryStack;
+    private final HashMap<FileScope, IMemorySpace> fileScopeToMemorySpace;
     private IMemorySpace globalSpace;
 
     private SymbolTable symbolTable() {
@@ -83,6 +85,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         globalSpace = new MemorySpace();
         statementStack = new ArrayDeque<>();
         scenarioBuilderStorage = new ScenarioBuilderStorage();
+        fileScopeToMemorySpace = new HashMap<>();
         memoryStack.push(globalSpace);
     }
 
@@ -100,8 +103,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
         semanticAnalyzer.setup(environment);
 
-        // TODO: scan lib path..
-        //  hacky
+        // TODO: scan lib path (hacky)..
         Path path = Paths.get("dungeon/assets/scripts/lib/");
         File libPath = new File(path.toAbsolutePath().toString());
 
@@ -116,11 +118,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 // add all scenario files up front for semantic analysis
                 // all other files will be loaded from the lib-directory as needed
                 for (File scenarioFile : scenarioFiles) {
-                    String content = DSLFileLoader.fileToString(path);
+                    var filePath = scenarioFile.toPath();
+                    String content = DSLFileLoader.fileToString(filePath);
                     var programAST = DungeonASTConverter.getProgramAST(content);
-                    ParsedFile parsedFile = new ParsedFile(path, programAST);
+                    ParsedFile parsedFile = new ParsedFile(filePath, programAST);
 
-                    //environment.addFileScope(new FileScope(parsedFile, environment.getGlobalScope()));
+                    environment.addFileScope(new FileScope(parsedFile, environment.getGlobalScope()));
+                    semanticAnalyzer.walk(parsedFile);
                 }
             }
         }
@@ -147,6 +151,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
     public IMemorySpace getGlobalMemorySpace() {
         return this.globalSpace;
     }
+
+    //region prototypes
 
     /**
      * Creates {@link PrototypeValue} instances for all `entity_type` and `item_type` definitions in
@@ -318,6 +324,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
         }
         return componentPrototype;
     }
+
+    // endregion
 
     protected void initializeScenarioBuilderStorage() {
         this.scenarioBuilderStorage.initializeScenarioBuilderStorage(this.environment);
@@ -595,25 +603,47 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return Value.NONE;
     }
 
+    protected IMemorySpace initializeFileMemorySpace(FileScope fs) {
+        IMemorySpace filesMemorySpace;
+        if (this.fileScopeToMemorySpace.containsKey(fs)) {
+            // if the fileScope is already in the hashmap, we assume, it is initialized
+            filesMemorySpace = this.fileScopeToMemorySpace.get(fs);
+        } else {
+            filesMemorySpace = new MemorySpace(this.globalSpace);
+            this.memoryStack.push(filesMemorySpace);
+
+            evaluateGlobalSymbolsOfScope(fs);
+            createPrototypes(this.environment, fs);
+
+            this.memoryStack.pop();
+        }
+        return filesMemorySpace;
+    }
+
     protected DungeonConfig generateQuestConfig(ObjectDefNode configDefinitionNode, ParsedFile pf) {
-        // TODO: this is for testing
-        //IScope globalScope = this.environment.getGlobalScope();
-        IScope fs = this.environment.getFileScope(pf.filePath());
+        IScope scope = this.environment.getFileScope(pf.filePath());
+        if (scope.equals(Scope.NULL)) {
+            throw new RuntimeException("Scope for file '" + pf.filePath() + "' is null");
+        }
 
-        evaluateGlobalSymbolsOfScope(fs);
-        createPrototypes(this.environment, fs);
+        FileScope fs = (FileScope)scope;
+        IMemorySpace fileMemorySpace = initializeFileMemorySpace(fs);
 
+        this.memoryStack.push(fileMemorySpace);
+
+        DungeonConfig dungeonConfig = null;
         Value configValue = (Value) configDefinitionNode.accept(this);
         Object config = configValue.getInternalValue();
         if (config instanceof DungeonConfig) {
-            DungeonConfig dungeonConfig = (DungeonConfig) config;
+            dungeonConfig = (DungeonConfig) config;
             if (dungeonConfig.displayName().isEmpty()) {
                 String objectName = configDefinitionNode.getIdName();
                 dungeonConfig = new DungeonConfig(dungeonConfig.dependencyGraph(), objectName);
             }
-            return dungeonConfig;
         }
-        return null;
+
+        this.memoryStack.push(fileMemorySpace);
+        return dungeonConfig;
     }
 
     protected Value instantiateDSLValue(AggregateType type) {

@@ -121,4 +121,25 @@ public class TetsDSLEntryPointFinder {
         task = taskNode.task();
         Assert.assertEquals("Kuckuck2", task.taskText());
     }
+
+    @Test
+    public void testParsingOfLibFiles() {
+        List<DSLEntryPoint> entryPoints = new ArrayList<>();
+        DSLEntryPointFinder finder = new DSLEntryPointFinder();
+        URL resource1 = getClass().getClassLoader().getResource("config1.dng");
+        assert resource1 != null;
+        Path firstPath = null;
+        try {
+            firstPath = Path.of(resource1.toURI());
+            var entryPointsFromFile = finder.getEntryPoints(firstPath).get();
+            entryPoints.addAll(entryPointsFromFile);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        DSLInterpreter interpreter = new DSLInterpreter();
+
+        DSLEntryPoint firstEntryPoint = entryPoints.get(0);
+        DungeonConfig config = interpreter.interpretEntryPoint(firstEntryPoint);
+
+    }
 }
