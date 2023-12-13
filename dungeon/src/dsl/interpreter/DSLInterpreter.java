@@ -59,6 +59,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
     private final ArrayDeque<IMemorySpace> instanceMemoryStack;
     private final HashMap<FileScope, IMemorySpace> fileScopeToMemorySpace;
     private IMemorySpace globalSpace;
+    private static Path relLibPath = Paths.get("dungeon/assets/scripts/lib");
+    private static String scenarioSubDirName = "scenario";
+    private static Path relScenarioPath = Paths.get(relLibPath + "/" + scenarioSubDirName);
+    private static Path libPath = relLibPath.toAbsolutePath();
+    private static Path scenarioPath = relScenarioPath.toAbsolutePath();
 
     private SymbolTable symbolTable() {
         return environment.getSymbolTable();
@@ -104,12 +109,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
         semanticAnalyzer.setup(environment);
 
         // TODO: scan lib path (hacky)..
-        Path path = Paths.get("dungeon/assets/scripts/lib/");
-        File libPath = new File(path.toAbsolutePath().toString());
+        File libraryPath = new File(libPath.toString());
 
-        if (libPath.exists() && libPath.isDirectory()) {
-            FileFilter scenarioDirFilter = file -> file.isDirectory() && file.getName().equals("scenario");
-            var optScenarioDir =  Arrays.stream(libPath.listFiles(scenarioDirFilter)).findFirst();
+        if (libraryPath.exists() && libraryPath.isDirectory()) {
+            FileFilter scenarioDirFilter = file -> file.isDirectory() && file.getName().equals(scenarioSubDirName);
+            var optScenarioDir =  Arrays.stream(libraryPath.listFiles(scenarioDirFilter)).findFirst();
             if (optScenarioDir.isPresent()) {
                 FileFilter scenarioFileFilter = file -> file.isFile() && file.getPath().endsWith(".dng");
                 var scenarioDir = optScenarioDir.get();
@@ -431,7 +435,16 @@ public class DSLInterpreter implements AstVisitor<Object> {
         evaluateGlobalSymbolsOfScope(this.environment.getGlobalScope());
         initializeScenarioBuilderStorage();
 
-        scanScopeForScenarioBuilders(this.environment.getGlobalScope());
+        // scan for scenario builders in scenario lib files
+        var files = this.environment.getFileScopes().keySet();
+        var scenarioFiles = files.stream().filter(p -> p.toString().contains(relScenarioPath.toString())).toList();
+
+        for (var scenarioFile : scenarioFiles) {
+            IScope fileScope = this.environment.getFileScope(scenarioFile);
+            scanScopeForScenarioBuilders(fileScope);
+        }
+        // TODO: also add scope of passed main  .dng
+        //scanScopeForScenarioBuilders(this.environment.getGlobalScope());
     }
 
     private void evaluateGlobalSymbolsOfScope(IScope scope) {
