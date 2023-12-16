@@ -97,6 +97,36 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     public void exitDefinition(DungeonDSLParser.DefinitionContext ctx) {}
 
     @Override
+    public void enterImport_unnamed(DungeonDSLParser.Import_unnamedContext ctx) {
+
+    }
+
+    @Override
+    public void exitImport_unnamed(DungeonDSLParser.Import_unnamedContext ctx) {
+
+    }
+
+    @Override
+    public void enterImport_named(DungeonDSLParser.Import_namedContext ctx) {
+
+    }
+
+    @Override
+    public void exitImport_named(DungeonDSLParser.Import_namedContext ctx) {
+
+    }
+
+    @Override
+    public void enterImport_def(DungeonDSLParser.Import_defContext ctx) {
+
+    }
+
+    @Override
+    public void exitImport_def(DungeonDSLParser.Import_defContext ctx) {
+
+    }
+
+    @Override
     public void enterFn_def(DungeonDSLParser.Fn_defContext ctx) {}
 
     @Override
