@@ -60,11 +60,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
     private final ArrayDeque<IMemorySpace> instanceMemoryStack;
     private final HashMap<FileScope, IMemorySpace> fileScopeToMemorySpace;
     private IMemorySpace globalSpace;
-    private static Path relLibPath = Paths.get("dungeon/assets/scripts/lib");
-    private static String scenarioSubDirName = "scenario";
-    private static Path relScenarioPath = Paths.get(relLibPath + "/" + scenarioSubDirName);
-    private static Path libPath = relLibPath.toAbsolutePath();
-    private static Path scenarioPath = relScenarioPath.toAbsolutePath();
+    public static final Path relLibPath = Paths.get("dungeon/assets/scripts/lib");
+    public static final String scenarioSubDirName = "scenario";
+    public static final Path relScenarioPath = Paths.get(relLibPath + "/" + scenarioSubDirName);
+    public static final Path libPath = relLibPath.toAbsolutePath();
+    public static final Path scenarioPath = relScenarioPath.toAbsolutePath();
 
     private SymbolTable symbolTable() {
         return environment.getSymbolTable();
