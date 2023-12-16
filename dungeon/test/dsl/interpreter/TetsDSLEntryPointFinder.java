@@ -1,5 +1,8 @@
 package dsl.interpreter;
 
+import dsl.semanticanalysis.scope.IScope;
+import dsl.semanticanalysis.symbol.FunctionSymbol;
+import dsl.semanticanalysis.typesystem.typebuilding.type.AggregateType;
 import entrypoint.DSLEntryPoint;
 import entrypoint.DungeonConfig;
 
@@ -141,5 +144,19 @@ public class TetsDSLEntryPointFinder {
         DSLEntryPoint firstEntryPoint = entryPoints.get(0);
         DungeonConfig config = interpreter.interpretEntryPoint(firstEntryPoint);
 
+        var rtEnv = interpreter.getRuntimeEnvironment();
+        var fileScopes = rtEnv.getFileScopes();
+        var scenarioFileSet = fileScopes.keySet().stream().filter(p -> p.toString().contains(DSLInterpreter.relScenarioPath.toString())).toList();
+        Assert.assertFalse(scenarioFileSet.isEmpty());
+
+        var scenarioFilePath = Path.of(DSLInterpreter.scenarioPath + "/scenarios.dng");
+        IScope fileScope = rtEnv.getFileScope(scenarioFilePath);
+
+        var symbols = fileScope.getSymbols();
+        var typeCount = symbols.stream().filter(s -> s instanceof AggregateType).count();
+        Assert.assertEquals(7, typeCount);
+
+        var funcCount = symbols.stream().filter(s -> s instanceof FunctionSymbol).count();
+        Assert.assertEquals(13, funcCount);
     }
 }
