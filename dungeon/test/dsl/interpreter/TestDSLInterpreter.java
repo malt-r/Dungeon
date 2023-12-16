@@ -2565,8 +2565,13 @@ public class TestDSLInterpreter {
                 (NativeInstantiate) runtimeEnvironment.getGlobalScope().resolve("instantiate");
         // create new IdNode for "wizard_type` to pass to native instantiate
         IdNode node = new IdNode("wizard_type", null);
+
+        // push file related memoryspace as context
+        interpreter.setFileContext(null);
+
         // call the function
-        var value = (AggregateValue) instantiateFunc.call(interpreter, List.of(node));
+        var value = (AggregateValue)interpreter.callCallable(instantiateFunc, List.of(node));
+
         // extract the entity from the Value-instance
         core.Entity entity = (core.Entity) value.getInternalValue();
 

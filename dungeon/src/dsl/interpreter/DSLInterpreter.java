@@ -56,6 +56,7 @@ import java.util.*;
 public class DSLInterpreter implements AstVisitor<Object> {
     private RuntimeEnvironment environment;
     private final ArrayDeque<IMemorySpace> memoryStack;
+    private final ArrayDeque<IMemorySpace> fileMemoryStack;
     private final ArrayDeque<IMemorySpace> instanceMemoryStack;
     private final HashMap<FileScope, IMemorySpace> fileScopeToMemorySpace;
     private IMemorySpace globalSpace;
@@ -86,12 +87,40 @@ public class DSLInterpreter implements AstVisitor<Object> {
     /** Constructor. */
     public DSLInterpreter() {
         memoryStack = new ArrayDeque<>();
+        fileMemoryStack = new ArrayDeque<>();
         instanceMemoryStack = new ArrayDeque<>();
         globalSpace = new MemorySpace();
         statementStack = new ArrayDeque<>();
         scenarioBuilderStorage = new ScenarioBuilderStorage();
         fileScopeToMemorySpace = new HashMap<>();
         memoryStack.push(globalSpace);
+    }
+
+    /**
+     * Set the execution context for the DSLInterpreter (load the memoryspace associated with
+     * the passed file with {@link Path}
+     *
+     * @param filePath
+     */
+    public void setFileContext(Path filePath) {
+        IScope scope = this.environment.getFileScope(filePath);
+        if (scope.equals(Scope.NULL)) {
+            throw new RuntimeException("No file scope associated with the passed filePath '"  + filePath + "'");
+        }
+        FileScope fileScope = (FileScope) scope;
+        IMemorySpace ms = this.fileScopeToMemorySpace.get(fileScope);
+        this.fileMemoryStack.push(ms);
+        this.memoryStack.push(ms);
+    }
+
+    /**
+     * Pops all file memory spaces and all memoryspaces on memory stack until only the global space remains.
+     */
+    public void resetFileContext() {
+        this.fileMemoryStack.clear();
+        while (this.memoryStack.peek() != null && !this.memoryStack.peek().equals(globalSpace)) {
+            this.memoryStack.pop();
+        }
     }
 
     /**
@@ -102,8 +131,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @return the interpreted {@link DungeonConfig}.
      */
     public DungeonConfig interpretEntryPoint(DSLEntryPoint entryPoint) {
-        //Node filesRootASTNode = entryPoint.file().rootASTNode();
-
         var environment = new GameEnvironment();
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
         semanticAnalyzer.setup(environment);
@@ -133,11 +160,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
             }
         }
 
-        // TODO: needs to be modified to only modify the files scope
         var result = semanticAnalyzer.walk(entryPoint.file());
 
         // at this point, all the symbolic and semantic data must be present in the environment
         initializeRuntime(environment);
+
+        // scan the entrypoint file (the main .dng file) for scenario builder functions
+        scanFileForScenarioBuilders(entryPoint.file().filePath());
 
         return generateQuestConfig(entryPoint.configDefinitionNode(), entryPoint.file());
     }
@@ -339,6 +368,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return this.environment.getGlobalScope().resolve("entity<><>");
     }
 
+    protected void scanFileForScenarioBuilders(Path path) {
+        IScope fileScope = this.environment.getFileScope(path);
+        if (!fileScope.equals(Scope.NULL)) {
+            scanScopeForScenarioBuilders(fileScope);
+        }
+    }
+
     protected void scanScopeForScenarioBuilders(IScope scope) {
         var symbols = scope.getSymbols();
         Set<IType> taskTypes = this.scenarioBuilderStorage.getTypesWithStorage();
@@ -430,33 +466,25 @@ public class DSLInterpreter implements AstVisitor<Object> {
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
+        // TODO: add entry point as global file scope!
         this.environment = new RuntimeEnvironment(environment, this);
-
-        // TODO: this should be obsolete, because it is done on a file basis in initializeFileMemorySpace
-        evaluateGlobalSymbolsOfScope(this.environment.getGlobalScope());
 
         initializeScenarioBuilderStorage();
 
         // scan for scenario builders in scenario lib files
         var files = this.environment.getFileScopes().keySet();
-        var scenarioFiles = files.stream().filter(p -> p.toString().contains(relScenarioPath.toString())).toList();
+        var scenarioFiles = files.stream().filter(p -> p != null && p.toString().contains(relScenarioPath.toString())).toList();
 
         for (var scenarioFile : scenarioFiles) {
             IScope fileScope = this.environment.getFileScope(scenarioFile);
             scanScopeForScenarioBuilders(fileScope);
         }
-        // TODO: also add scope of passed main  .dng, until then, tests probably fail
-        //scanScopeForScenarioBuilders(this.environment.getGlobalScope());
     }
 
     private void evaluateGlobalSymbolsOfScope(IScope scope) {
         // bind all function definition and object definition symbols to values
         // in global memorySpace
 
-        // TODO: this should potentially done on a file basis, not globally for the whole
-        //  DSLInterpreter; should define a file-scope...
-
-        // TODO: don't put everything in globalValues.. where does this even go?
         HashMap<Symbol, Value> globalValues = new HashMap<>();
         List<Symbol> globalSymbols = scope.getSymbols();
         for (var symbol : globalSymbols) {
@@ -586,6 +614,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         ParsedFile pf = semanticAnalyzer.latestParsedFile;
 
         initializeRuntime(environment);
+        scanFileForScenarioBuilders(pf.filePath());
 
         Value questConfigValue = (Value) generateQuestConfig(programAST, pf);
         return questConfigValue.getInternalValue();
@@ -599,23 +628,29 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *     #initializeRuntime(IEnvironment)})
      */
     public Object generateQuestConfig(Node programAST, ParsedFile parsedFile) {
-        // TODO: this needs to accomodate for file scopes!
         IScope fs = this.environment.getFileScope(parsedFile.filePath());
 
-        evaluateGlobalSymbolsOfScope(fs);
-        createPrototypes(this.environment, fs);
+        var filesMemorySpace = initializeFileMemorySpace((FileScope)fs);
+        this.memoryStack.push(filesMemorySpace);
+        this.fileMemoryStack.push(filesMemorySpace);
 
+        Object questConfigObject = Value.NONE;
         // find quest_config definition
         for (var node : programAST.getChildren()) {
             if (node.type == Node.Type.ObjectDefinition) {
                 var objDefNode = (ObjectDefNode) node;
                 if (objDefNode.getTypeSpecifierName().equals("quest_config")
                         || objDefNode.getTypeSpecifierName().equals("dungeon_config")) {
-                    return objDefNode.accept(this);
+                    questConfigObject = objDefNode.accept(this);
+                    break;
                 }
             }
         }
-        return Value.NONE;
+
+        this.memoryStack.pop();
+        this.fileMemoryStack.pop();
+
+        return questConfigObject;
     }
 
     protected IMemorySpace initializeFileMemorySpace(FileScope fs) {
@@ -625,26 +660,29 @@ public class DSLInterpreter implements AstVisitor<Object> {
             filesMemorySpace = this.fileScopeToMemorySpace.get(fs);
         } else {
             filesMemorySpace = new MemorySpace(this.globalSpace);
-            this.memoryStack.push(filesMemorySpace);
+            this.fileScopeToMemorySpace.put(fs, filesMemorySpace);
 
+            this.memoryStack.push(filesMemorySpace);
             evaluateGlobalSymbolsOfScope(fs);
             createPrototypes(this.environment, fs);
-
             this.memoryStack.pop();
         }
         return filesMemorySpace;
     }
 
     protected DungeonConfig generateQuestConfig(ObjectDefNode configDefinitionNode, ParsedFile pf) {
+        // TODO: this needs to be done for every "entry point into the interpreter"
+
         IScope scope = this.environment.getFileScope(pf.filePath());
         if (scope.equals(Scope.NULL)) {
             throw new RuntimeException("Scope for file '" + pf.filePath() + "' is null");
         }
 
         FileScope fs = (FileScope)scope;
-        IMemorySpace fileMemorySpace = initializeFileMemorySpace(fs);
 
+        IMemorySpace fileMemorySpace = initializeFileMemorySpace(fs);
         this.memoryStack.push(fileMemorySpace);
+        this.fileMemoryStack.push(fileMemorySpace);
 
         DungeonConfig dungeonConfig = null;
         Value configValue = (Value) configDefinitionNode.accept(this);
@@ -657,7 +695,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
             }
         }
 
-        this.memoryStack.push(fileMemorySpace);
+        this.memoryStack.pop();
+        this.fileMemoryStack.pop();
         return dungeonConfig;
     }
 
@@ -1565,7 +1604,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
             return returnValue;
         } else if (callable.getCallableType().equals(ICallable.Type.UserDefined)) {
             FunctionSymbol functionSymbol = (FunctionSymbol) callable;
-            return executeUserDefinedFunctionRawParameters(functionSymbol, parameterObjects);
+
+            Object retObject = executeUserDefinedFunctionRawParameters(functionSymbol, parameterObjects);
+            return retObject;
         }
         return null;
     }
@@ -1579,12 +1620,29 @@ public class DSLInterpreter implements AstVisitor<Object> {
      */
     protected Object executeUserDefinedFunctionRawParameters(
             FunctionSymbol symbol, List<Object> parameterObjects) {
+        // check, whether file scopes memory space is on top of file memory stack
         IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol);
         setupFunctionParametersRaw(symbol, functionMemorySpace, parameterObjects);
+
+        IScope scope = symbol.getScope();
+        assert scope instanceof FileScope;
+        FileScope fs = (FileScope)scope;
+        boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
+
+        if (otherFileMSOnTop) {
+            IMemorySpace filesMemorySpace = initializeFileMemorySpace(fs);
+            this.memoryStack.push(filesMemorySpace);
+            this.fileMemoryStack.push(filesMemorySpace);
+        }
 
         this.memoryStack.push(functionMemorySpace);
         executeUserDefinedFunctionBody(symbol);
         functionMemorySpace = memoryStack.pop();
+
+        if (otherFileMSOnTop) {
+            this.memoryStack.pop();
+            this.fileMemoryStack.pop();
+        }
 
         return getReturnValueFromMemorySpace(functionMemorySpace);
     }
@@ -1597,15 +1655,39 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @return The return value of the function call
      */
     public Object executeUserDefinedFunction(FunctionSymbol symbol, List<Node> parameterNodes) {
+        // TODO PROBLEM: parameterNodes must be evaluated in call memory space, then the files
+        //  memory space must be pushed, then the function memory space must be pushed
+        //  -> current creation of function memory space does not work with this, order of
+        //  operations is wrong -> memory space checking could be done in createFunctionMemorySpace
+
+        // TODO: File Memory Space checking
+        // TODO: check client code for duplicate file memory space checking
+
         IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol);
         // can't push memory space yet! If a passed argument has the same identifier
         // as a parameter, the name will be resolved in the new memory space and not
         // the enclosing memory space, containing the argument
         setupFunctionParameters(symbol, functionMemorySpace, parameterNodes);
 
+        IScope scope = symbol.getScope();
+        assert scope instanceof FileScope;
+        FileScope fs = (FileScope)scope;
+        boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
+
+        if (otherFileMSOnTop) {
+            IMemorySpace filesMemorySpace = initializeFileMemorySpace(fs);
+            this.memoryStack.push(filesMemorySpace);
+            this.fileMemoryStack.push(filesMemorySpace);
+        }
+
         this.memoryStack.push(functionMemorySpace);
         executeUserDefinedFunctionBody(symbol);
         functionMemorySpace = memoryStack.pop();
+
+        if (otherFileMSOnTop) {
+            this.memoryStack.pop();
+            this.fileMemoryStack.pop();
+        }
 
         return getReturnValueFromMemorySpace(functionMemorySpace);
     }
@@ -1665,6 +1747,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
         }
     }
 
+    private boolean isDifferentMemorySpaceOnTop(FileScope fs) {
+        IMemorySpace filesMemorySpace = initializeFileMemorySpace(fs);
+
+        IMemorySpace topMS = this.fileMemoryStack.peek();
+        return topMS == null || !topMS.equals(filesMemorySpace);
+    }
+
     /**
      * Create a new IMemorySpace for a function call and bind the return Value, if the function has
      * a return type
@@ -1673,6 +1762,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @return The created IMemorySpace
      */
     private IMemorySpace createFunctionMemorySpace(ScopedSymbol functionSymbol) {
+
         // push new memorySpace and parameters on spaceStack
         var functionMemSpace = new MemorySpace(memoryStack.peek());
 
