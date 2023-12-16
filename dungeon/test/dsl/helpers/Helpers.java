@@ -147,7 +147,7 @@ public class Helpers {
         symbolTableParser.walk(ast);
         ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
-        interpreter.initializeRuntime(environment);
+        interpreter.initializeRuntime(environment, latestParsedFile.filePath());
         Value questConfigValue = (Value) interpreter.generateQuestConfig(ast, latestParsedFile);
         return questConfigValue.getInternalValue();
     }
@@ -173,7 +173,7 @@ public class Helpers {
         symbolTableParser.walk(ast);
         ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
-        interpreter.initializeRuntime(environment);
+        interpreter.initializeRuntime(environment, latestParsedFile.filePath());
 
         return interpreter.generateQuestConfig(ast, latestParsedFile);
     }

@@ -95,7 +95,7 @@ public class TestDSLInterpreter {
         ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, latestParsedFile.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
@@ -130,7 +130,7 @@ public class TestDSLInterpreter {
         ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, pf.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
@@ -166,7 +166,7 @@ public class TestDSLInterpreter {
         ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, pf.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
@@ -2567,7 +2567,7 @@ public class TestDSLInterpreter {
         IdNode node = new IdNode("wizard_type", null);
 
         // push file related memoryspace as context
-        interpreter.setFileContext(null);
+        interpreter.setContextFileScope(null);
 
         // call the function
         var value = (AggregateValue)interpreter.callCallable(instantiateFunc, List.of(node));

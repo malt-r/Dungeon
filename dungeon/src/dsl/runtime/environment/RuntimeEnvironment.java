@@ -26,6 +26,7 @@ public class RuntimeEnvironment implements IEnvironment {
     private final HashMap<String, Symbol> functions;
     private final HashMap<String, PrototypeValue> prototypes;
     protected HashMap<Path, FileScope> fileScopes = new HashMap<>();
+    private final FileScope entryPointFileScope;
     private final HashMap<Type, IType> javaTypeToDSLType;
     private final RuntimeObjectTranslator runtimeObjectTranslator;
     private final TypeBuilder typeBuilder;
@@ -41,7 +42,7 @@ public class RuntimeEnvironment implements IEnvironment {
      *
      * @param other the other environment to create a new RuntimeEnvironment from
      */
-    public RuntimeEnvironment(IEnvironment other, DSLInterpreter interpreter) {
+    public RuntimeEnvironment(IEnvironment other, DSLInterpreter interpreter, FileScope entryPointFileScope) {
         this.symbolTable = other.getSymbolTable();
         this.typeBuilder = other.getTypeBuilder();
 
@@ -58,6 +59,11 @@ public class RuntimeEnvironment implements IEnvironment {
         this.runtimeObjectTranslator = other.getRuntimeObjectTranslator();
         this.typeInstantiator = new TypeInstantiator(interpreter);
         this.fileScopes = other.getFileScopes();
+        this.entryPointFileScope = entryPointFileScope;
+    }
+
+    public FileScope entryPointFileScope() {
+        return entryPointFileScope;
     }
 
     /**

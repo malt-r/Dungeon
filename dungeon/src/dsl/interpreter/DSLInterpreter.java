@@ -100,14 +100,24 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * Set the execution context for the DSLInterpreter (load the memoryspace associated with
      * the passed file with {@link Path}
      *
-     * @param filePath
+     * @param filePath the path of the file to set as context
      */
-    public void setFileContext(Path filePath) {
+    public void setContextFileByPath(Path filePath) {
         IScope scope = this.environment.getFileScope(filePath);
         if (scope.equals(Scope.NULL)) {
             throw new RuntimeException("No file scope associated with the passed filePath '"  + filePath + "'");
         }
         FileScope fileScope = (FileScope) scope;
+        setContextFileScope(fileScope);
+    }
+
+    /**
+     * Set the execution context for the DSLInterpreter (load the memoryspace associated with
+     * the passed {@link FileScope})
+     *
+     * @param fileScope the fileScope of the file to set as context
+     */
+    public void setContextFileScope(FileScope fileScope) {
         IMemorySpace ms = this.fileScopeToMemorySpace.get(fileScope);
         this.fileMemoryStack.push(ms);
         this.memoryStack.push(ms);
@@ -163,7 +173,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         var result = semanticAnalyzer.walk(entryPoint.file());
 
         // at this point, all the symbolic and semantic data must be present in the environment
-        initializeRuntime(environment);
+        initializeRuntime(environment, entryPoint.file().filePath());
 
         // scan the entrypoint file (the main .dng file) for scenario builder functions
         scanFileForScenarioBuilders(entryPoint.file().filePath());
@@ -448,8 +458,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
             scenarioBuilder = optionalScenarioBuilder.get();
         }
 
+        FileScope entryPointFS = this.environment.entryPointFileScope();
+        setContextFileScope(entryPointFS);
+
         Value retValue = (Value) this.callCallableRawParameters(scenarioBuilder, List.of(task));
         var typeInstantiator = this.environment.getTypeInstantiator();
+
+        resetFileContext();
 
         // create the java representation of the return Value
         return Optional.of(typeInstantiator.instantiate(retValue));
@@ -460,14 +475,14 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *
      * @param environment The environment to bind the functions, objects and data types from.
      */
-    public void initializeRuntime(IEnvironment environment) {
+    public void initializeRuntime(IEnvironment environment, Path mainExecutionFilePath) {
         // reinitialize global memory space
         this.memoryStack.clear();
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
-        // TODO: add entry point as global file scope!
-        this.environment = new RuntimeEnvironment(environment, this);
+        FileScope fs = (FileScope)environment.getFileScope(mainExecutionFilePath);
+        this.environment = new RuntimeEnvironment(environment, this, fs);
 
         initializeScenarioBuilderStorage();
 
@@ -613,7 +628,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         var result = semanticAnalyzer.walk(programAST);
         ParsedFile pf = semanticAnalyzer.latestParsedFile;
 
-        initializeRuntime(environment);
+        initializeRuntime(environment, pf.filePath());
         scanFileForScenarioBuilders(pf.filePath());
 
         Value questConfigValue = (Value) generateQuestConfig(programAST, pf);
@@ -624,8 +639,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @param programAST The AST of the DSL program to generate a quest config object from
      * @return the object, which represents the quest config of the passed DSL program. The type of
      *     this object depends on the Class, which is set up as the 'quest_config' type in the
-     *     {@link IEnvironment} used by the DSLInterpreter (set by {@link
-     *     #initializeRuntime(IEnvironment)})
+     *     {@link IEnvironment} used by the DSLInterpreter (set by {@link #initializeRuntime(IEnvironment, FileScope)})
      */
     public Object generateQuestConfig(Node programAST, ParsedFile parsedFile) {
         IScope fs = this.environment.getFileScope(parsedFile.filePath());
