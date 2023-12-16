@@ -480,13 +480,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
      *
      * @param environment The environment to bind the functions, objects and data types from.
      */
-    public void initializeRuntime(IEnvironment environment, Path mainExecutionFilePath) {
+    public void initializeRuntime(IEnvironment environment, Path entryPointFilePath) {
         // reinitialize global memory space
         this.memoryStack.clear();
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
-        FileScope fs = (FileScope)environment.getFileScope(mainExecutionFilePath);
+        FileScope fs = (FileScope)environment.getFileScope(entryPointFilePath);
         this.environment = new RuntimeEnvironment(environment, this, fs);
 
         initializeScenarioBuilderStorage();
