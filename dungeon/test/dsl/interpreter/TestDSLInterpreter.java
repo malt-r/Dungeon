@@ -15,6 +15,7 @@ import dsl.interpreter.mockecs.*;
 import dsl.parser.ast.IdNode;
 import dsl.parser.ast.Node;
 import dsl.runtime.memoryspace.EncapsulatedObject;
+import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
 import dsl.runtime.value.PrototypeValue;
 import dsl.runtime.value.Value;
@@ -349,7 +350,9 @@ public class TestDSLInterpreter {
         Helpers.generateQuestConfigWithCustomTypes(
                 program, env, interpreter, TestComponent.class, OtherComponent.class);
 
-        var typeWithDefaults = (PrototypeValue)interpreter.getCurrentMemorySpace().resolve("c");
+        IMemorySpace ms = interpreter.getEntryPointFileMemorySpace();
+
+        var typeWithDefaults = (PrototypeValue)ms.resolve("c");
         assertNotEquals(PrototypeValue.NONE, typeWithDefaults);
 
         var firstCompWithDefaults = typeWithDefaults.getDefaultValue("test_component");
@@ -410,7 +413,7 @@ public class TestDSLInterpreter {
 
         var entity = ((CustomQuestConfig) questConfig).entity();
         var rtEnv = interpreter.getRuntimeEnvironment();
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getFileMemorySpace(rtEnv.entryPointFileScope());
 
         // the config should contain the my_obj definition on the entity-value, which should
         // encapsulate the actual
@@ -492,7 +495,7 @@ public class TestDSLInterpreter {
 
         var entity = ((CustomQuestConfig) questConfig).entity();
         var rtEnv = interpreter.getRuntimeEnvironment();
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
 
         // the config should contain the my_obj definition on the entity-value, which should
         // encapsulate the actual
@@ -541,7 +544,7 @@ public class TestDSLInterpreter {
 
         Helpers.generateQuestConfigWithCustomTypes(program, env, interpreter, Entity.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
 
         // check, if the component was instantiated and the
         // Point member is set to null, because the Point type is not supported
@@ -597,7 +600,7 @@ public class TestDSLInterpreter {
         Helpers.generateQuestConfigWithCustomTypes(
                 program, env, interpreter, Entity.class, TestComponent1.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
         AggregateValue config = (AggregateValue) (globalMs.resolve("config"));
         AggregateValue myObj = (AggregateValue) config.getMemorySpace().resolve("entity");
         AggregateValue component =
@@ -651,10 +654,9 @@ public class TestDSLInterpreter {
                 interpreter,
                 Entity.class,
                 TestComponent1.class,
-                // TestComponentWithExternalType.class,
                 ExternalType.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
         AggregateValue config = (AggregateValue) (globalMs.resolve("config"));
         AggregateValue myObj = (AggregateValue) config.getMemorySpace().resolve("entity");
         AggregateValue component =
@@ -2567,7 +2569,7 @@ public class TestDSLInterpreter {
         IdNode node = new IdNode("wizard_type", null);
 
         // push file related memoryspace as context
-        interpreter.setContextFileScope(null);
+        interpreter.setContextFileByPath(null);
 
         // call the function
         var value = (AggregateValue)interpreter.callCallable(instantiateFunc, List.of(node));
@@ -2609,6 +2611,10 @@ public class TestDSLInterpreter {
                 (NativeInstantiate) runtimeEnvironment.getGlobalScope().resolve("instantiate");
         // create new IdNode for "wizard_type` to pass to native instantiate
         IdNode node = new IdNode("wizard_type", null);
+
+        // set file context
+        interpreter.setContextFileByPath(null);
+
         // call the function
         var value = (AggregateValue) instantiateFunc.call(interpreter, List.of(node));
         // extract the entity from the Value-instance

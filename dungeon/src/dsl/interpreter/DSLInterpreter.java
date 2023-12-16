@@ -195,6 +195,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return this.globalSpace;
     }
 
+    public IMemorySpace getEntryPointFileMemorySpace() {
+        var fs = this.environment.entryPointFileScope();
+        return this.fileScopeToMemorySpace.get(fs);
+    }
+
     //region prototypes
 
     /**
@@ -665,6 +670,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
         this.fileMemoryStack.pop();
 
         return questConfigObject;
+    }
+
+    public IMemorySpace getFileMemorySpace(FileScope fs) {
+        return this.fileScopeToMemorySpace.get(fs);
     }
 
     protected IMemorySpace initializeFileMemorySpace(FileScope fs) {
@@ -1600,7 +1609,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         if (callable.getCallableType().equals(ICallable.Type.Native)) {
             NativeFunction func = (NativeFunction) callable;
 
-            IMemorySpace functionMemorySpace = createFunctionMemorySpace(func);
+            IMemorySpace functionMemorySpace = createFunctionMemorySpace(func, this.getCurrentMemorySpace());
             setupFunctionParametersRaw(func, functionMemorySpace, parameterObjects);
 
             // create mock ID-nodes
@@ -1634,19 +1643,25 @@ public class DSLInterpreter implements AstVisitor<Object> {
      */
     protected Object executeUserDefinedFunctionRawParameters(
             FunctionSymbol symbol, List<Object> parameterObjects) {
-        // check, whether file scopes memory space is on top of file memory stack
-        IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol);
-        setupFunctionParametersRaw(symbol, functionMemorySpace, parameterObjects);
-
         IScope scope = symbol.getScope();
         assert scope instanceof FileScope;
         FileScope fs = (FileScope)scope;
         boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
 
+        IMemorySpace functionsParentMS;
         if (otherFileMSOnTop) {
-            IMemorySpace filesMemorySpace = initializeFileMemorySpace(fs);
-            this.memoryStack.push(filesMemorySpace);
-            this.fileMemoryStack.push(filesMemorySpace);
+            functionsParentMS = initializeFileMemorySpace(fs);
+        } else {
+            functionsParentMS = this.getCurrentMemorySpace();
+        }
+
+        // check, whether file scopes memory space is on top of file memory stack
+        IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol, functionsParentMS);
+        setupFunctionParametersRaw(symbol, functionMemorySpace, parameterObjects);
+
+        if (otherFileMSOnTop) {
+            this.memoryStack.push(functionsParentMS);
+            this.fileMemoryStack.push(functionsParentMS);
         }
 
         this.memoryStack.push(functionMemorySpace);
@@ -1676,22 +1691,27 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         // TODO: File Memory Space checking
         // TODO: check client code for duplicate file memory space checking
-
-        IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol);
-        // can't push memory space yet! If a passed argument has the same identifier
-        // as a parameter, the name will be resolved in the new memory space and not
-        // the enclosing memory space, containing the argument
-        setupFunctionParameters(symbol, functionMemorySpace, parameterNodes);
-
         IScope scope = symbol.getScope();
         assert scope instanceof FileScope;
         FileScope fs = (FileScope)scope;
         boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
 
+        IMemorySpace functionsParentMS;
         if (otherFileMSOnTop) {
-            IMemorySpace filesMemorySpace = initializeFileMemorySpace(fs);
-            this.memoryStack.push(filesMemorySpace);
-            this.fileMemoryStack.push(filesMemorySpace);
+            functionsParentMS = initializeFileMemorySpace(fs);
+        } else {
+            functionsParentMS = this.getCurrentMemorySpace();
+        }
+
+        IMemorySpace functionMemorySpace = createFunctionMemorySpace(symbol, functionsParentMS);
+        // can't push memory space yet! If a passed argument has the same identifier
+        // as a parameter, the name will be resolved in the new memory space and not
+        // the enclosing memory space, containing the argument
+        setupFunctionParameters(symbol, functionMemorySpace, parameterNodes);
+
+        if (otherFileMSOnTop) {
+            this.memoryStack.push(functionsParentMS);
+            this.fileMemoryStack.push(functionsParentMS);
         }
 
         this.memoryStack.push(functionMemorySpace);
@@ -1775,10 +1795,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @param functionSymbol The Symbol representing the function definition
      * @return The created IMemorySpace
      */
-    private IMemorySpace createFunctionMemorySpace(ScopedSymbol functionSymbol) {
+    private IMemorySpace createFunctionMemorySpace(ScopedSymbol functionSymbol, IMemorySpace parentSpace) {
 
         // push new memorySpace and parameters on spaceStack
-        var functionMemSpace = new MemorySpace(memoryStack.peek());
+        var functionMemSpace = new MemorySpace(parentSpace);
 
         // create and bind the return value
         var functionType = (FunctionType) functionSymbol.getDataType();
