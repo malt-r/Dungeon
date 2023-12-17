@@ -151,6 +151,6 @@ public class ImportAnalyzer implements AstVisitor<Void> {
 
     @Override
     public Void visit(ItemPrototypeDefinitionNode node) {
-        return AstVisitor.super.visit(node);
+        return null;
     }
 }
