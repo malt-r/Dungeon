@@ -10,6 +10,10 @@ import java.util.List;
 public class ImportAggregateTypeSymbol extends AggregateType {
     protected final AggregateType originalTypeSymbol;
 
+    public AggregateType originalTypeSymbol() {
+        return originalTypeSymbol;
+    }
+
     public ImportAggregateTypeSymbol(AggregateType originalTypeSymbol, IScope parentScope) {
         super(originalTypeSymbol.getName(), parentScope);
         this.originalTypeSymbol = originalTypeSymbol;

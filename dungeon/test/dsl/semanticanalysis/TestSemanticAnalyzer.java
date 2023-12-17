@@ -1229,5 +1229,31 @@ public class TestSemanticAnalyzer {
         Assert.assertEquals(originalFunctionSymbol, paramSymbol.getScope());
     }
 
-    // TODO: type importing
+    @Test
+    public void testImportType() {
+        String program =
+            """
+            #import "test.dng":my_ent_type as my_type
+            """;
+
+        // setup
+        var ast = Helpers.getASTFromString(program);
+        SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
+
+        var env = new GameEnvironment();
+        symbolTableParser.setup(env);
+        var symbolTable = symbolTableParser.walk(ast).symbolTable;
+        var fileScope = env.getFileScope(null);
+        Symbol myTypeSymbol = fileScope.resolve("my_type");
+        Assert.assertNotEquals(Symbol.NULL, myTypeSymbol);
+
+        ImportAggregateTypeSymbol importSymbol = (ImportAggregateTypeSymbol) myTypeSymbol;
+        AggregateType originalType = importSymbol.originalTypeSymbol();
+        Assert.assertEquals("my_ent_type", originalType.getName());
+        Assert.assertNotEquals(fileScope, originalType.getScope());
+
+        // resolve
+        Symbol member = originalType.resolve("interaction_component");
+        Assert.assertEquals(originalType, member.getScope());
+    }
 }
