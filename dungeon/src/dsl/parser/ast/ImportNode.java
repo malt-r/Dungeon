@@ -44,4 +44,9 @@ public class ImportNode extends Node {
         this.addChild(asIdNode);
         this.type = Type.named;
     }
+
+    @Override
+    public <T> T accept(AstVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }
