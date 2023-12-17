@@ -3,6 +3,7 @@ package dsl.interpreter;
 import static org.junit.Assert.*;
 
 import contrib.components.CollideComponent;
+import contrib.components.InteractionComponent;
 import contrib.components.InventoryComponent;
 import contrib.components.ItemComponent;
 
@@ -14,6 +15,7 @@ import dsl.helpers.Helpers;
 import dsl.interpreter.mockecs.*;
 import dsl.parser.ast.IdNode;
 import dsl.parser.ast.Node;
+import dsl.parser.ast.StringNode;
 import dsl.runtime.memoryspace.EncapsulatedObject;
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
@@ -48,12 +50,15 @@ import task.game.content.QuestItem;
 import task.tasktype.AssignTask;
 import task.tasktype.Element;
 import task.tasktype.Quiz;
+import task.tasktype.quizquestion.SingleChoice;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -4034,4 +4039,72 @@ public class TestDSLInterpreter {
         Assert.assertTrue(entity.toString().contains("HELLO"));
         Assert.assertEquals("CUSTOM TEXT", task.scenarioText());
     }
+    @Test
+    public void testImportFuncCall() {
+        String program =
+            """
+            #import "test.dng":test_fn as print_hello_world
+
+            entity_type my_type {
+                interaction_component {
+                    on_interaction: func
+                }
+            }
+
+            fn func(entity ent, entity other_ent) {
+                print_hello_world();
+            }
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var my_ent : entity;
+                my_ent = instantiate(my_type);
+                room_set.add(my_ent);
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment();
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+
+        var ic = entity.fetch(InteractionComponent.class).get();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        ic.triggerInteraction(entity, entity);
+
+        String output = outputStream.toString();
+        assertEquals(
+            "Hello, World!"
+                + System.lineSeparator(),
+            output);
+    }
+
 }
