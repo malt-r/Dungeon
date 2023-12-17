@@ -309,6 +309,11 @@ public class TypeBinder implements AstVisitor<Object> {
     // region ASTVisitor implementation for nodes unrelated to type binding
 
     @Override
+    public Object visit(ImportNode node) {
+        return null;
+    }
+
+    @Override
     public Object visit(IdNode node) {
         return null;
     }

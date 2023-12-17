@@ -183,4 +183,9 @@ public class FunctionDefinitionBinder implements AstVisitor<Void> {
     public Void visit(MapTypeIdentifierNode node) {
         return null;
     }
+
+    @Override
+    public Void visit(ImportNode node) {
+        return null;
+    }
 }

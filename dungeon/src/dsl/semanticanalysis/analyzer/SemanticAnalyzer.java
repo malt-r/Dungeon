@@ -246,6 +246,9 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
                 FunctionDefinitionBinder fdb = new FunctionDefinitionBinder();
                 fdb.bindFunctionDefinitions(symbolTable, topMostScope, node);
 
+                ImportAnalyzer ia = new ImportAnalyzer(this.environment);
+                ia.analyze(node, this);
+
                 visitChildren(node);
 
                 break;
@@ -810,6 +813,12 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
     }
 
     // region ASTVisitor implementation for nodes unrelated to semantic analysis
+
+    @Override
+    public Void visit(ImportNode node) {
+        return null;
+    }
+
     @Override
     public Void visit(DecNumNode node) {
         return null;
