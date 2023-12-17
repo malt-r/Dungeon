@@ -97,13 +97,18 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     public void exitDefinition(DungeonDSLParser.DefinitionContext ctx) {}
 
     @Override
-    public void enterImport_unnamed(DungeonDSLParser.Import_unnamedContext ctx) {
-
-    }
+    public void enterImport_unnamed(DungeonDSLParser.Import_unnamedContext ctx) {}
 
     @Override
     public void exitImport_unnamed(DungeonDSLParser.Import_unnamedContext ctx) {
+        // pop id node
+        Node idNode = this.astStack.pop();
 
+        // pop path node
+        Node pathNode = this.astStack.pop();
+
+        Node importNode = new ImportNode(pathNode, idNode);
+        this.astStack.push(importNode);
     }
 
     @Override
@@ -113,18 +118,19 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
 
     @Override
     public void exitImport_named(DungeonDSLParser.Import_namedContext ctx) {
+        // pop "as" id node
+        Node asIdNode = this.astStack.pop();
 
+        // pop id node
+        Node idNode = this.astStack.pop();
+
+        // pop path node
+        Node pathNode = this.astStack.pop();
+
+        Node importNode = new ImportNode(pathNode, idNode, asIdNode);
+        this.astStack.push(importNode);
     }
 
-    @Override
-    public void enterImport_def(DungeonDSLParser.Import_defContext ctx) {
-
-    }
-
-    @Override
-    public void exitImport_def(DungeonDSLParser.Import_defContext ctx) {
-
-    }
 
     @Override
     public void enterFn_def(DungeonDSLParser.Fn_defContext ctx) {}
