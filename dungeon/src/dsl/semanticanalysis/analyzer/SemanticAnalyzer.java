@@ -247,7 +247,7 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
                 fdb.bindFunctionDefinitions(symbolTable, topMostScope, node);
 
                 ImportAnalyzer ia = new ImportAnalyzer(this.environment);
-                ia.analyze(node, this);
+                ia.analyze(node, this, topMostScope);
 
                 visitChildren(node);
 
