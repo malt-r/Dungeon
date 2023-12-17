@@ -11,6 +11,7 @@ import dsl.semanticanalysis.analyzer.SemanticAnalyzer;
 import dsl.semanticanalysis.environment.GameEnvironment;
 import dsl.semanticanalysis.scope.Scope;
 import dsl.semanticanalysis.symbol.FunctionSymbol;
+import dsl.semanticanalysis.symbol.ImportFunctionSymbol;
 import dsl.semanticanalysis.symbol.ScopedSymbol;
 import dsl.semanticanalysis.symbol.Symbol;
 import dsl.semanticanalysis.typesystem.typebuilding.TypeBuilder;
@@ -1199,4 +1200,34 @@ public class TestSemanticAnalyzer {
         Symbol expressionRefNode = symbolTable.getSymbolsForAstNode(expressionIdNode).get(0);
         Assert.assertEquals(myListSymbol, expressionRefNode);
     }
+
+    @Test
+    public void testImportFunc() {
+        String program =
+            """
+            #import "test.dng":test_fn_param as my_func
+            """;
+
+        // setup
+        var ast = Helpers.getASTFromString(program);
+        SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
+
+        var env = new GameEnvironment();
+        symbolTableParser.setup(env);
+        var symbolTable = symbolTableParser.walk(ast).symbolTable;
+        var fileScope = env.getFileScope(null);
+        Symbol myFuncSymbol = fileScope.resolve("my_func");
+        Assert.assertNotEquals(Symbol.NULL, myFuncSymbol);
+
+        ImportFunctionSymbol importFunctionSymbol = (ImportFunctionSymbol) myFuncSymbol;
+        FunctionSymbol originalFunctionSymbol = importFunctionSymbol.originalFunctionSymbol();
+        Assert.assertEquals("test_fn_param", originalFunctionSymbol.getName());
+        Assert.assertNotEquals(importFunctionSymbol.getScope(), originalFunctionSymbol.getScope());
+
+        // test parameter resolving
+        Symbol paramSymbol = importFunctionSymbol.resolve("param");
+        Assert.assertEquals(originalFunctionSymbol, paramSymbol.getScope());
+    }
+
+    // TODO: type importing
 }

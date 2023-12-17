@@ -14,6 +14,7 @@ public class ImportFunctionSymbol extends FunctionSymbol {
     public FunctionSymbol originalFunctionSymbol(){
         return originalSymbol;
     }
+
     public ImportFunctionSymbol(FunctionSymbol originalSymbol, IScope parentScope) {
         super(originalSymbol.getName(), parentScope, originalSymbol.getAstRootNode(), originalSymbol.getFunctionType());
         this.originalSymbol = originalSymbol;

@@ -1,0 +1,7 @@
+fn test_fn() {
+    print("Hello, World!");
+}
+
+fn test_fn_param(int param) {
+    print(pararm);
+}
