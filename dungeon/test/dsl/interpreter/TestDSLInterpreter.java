@@ -4039,6 +4039,7 @@ public class TestDSLInterpreter {
         Assert.assertTrue(entity.toString().contains("HELLO"));
         Assert.assertEquals("CUSTOM TEXT", task.scenarioText());
     }
+
     @Test
     public void testImportFuncCall() {
         String program =
@@ -4107,4 +4108,61 @@ public class TestDSLInterpreter {
             output);
     }
 
+    @Test
+    public void testImportEntityType() {
+        String program =
+            """
+            #import "test.dng":my_ent_type as my_type
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var my_ent : entity;
+                my_ent = instantiate(my_type);
+                room_set.add(my_ent);
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment();
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+
+        var ic = entity.fetch(InteractionComponent.class).get();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        ic.triggerInteraction(entity, entity);
+
+        String output = outputStream.toString();
+        assertEquals(
+            "my_interaction_handler"
+                + System.lineSeparator(),
+            output);
+    }
 }

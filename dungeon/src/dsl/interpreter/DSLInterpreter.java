@@ -925,6 +925,22 @@ public class DSLInterpreter implements AstVisitor<Object> {
         if (symbol instanceof FunctionSymbol functionSymbol) {
             return new FunctionValue(functionSymbol.getFunctionType(), functionSymbol);
         }
+        if (symbol instanceof ImportAggregateTypeSymbol aggregateTypeSymbol) {
+            // get file associated memory space of original definition
+            AggregateType originalType = aggregateTypeSymbol.originalTypeSymbol();
+            IScope originalScope = originalType.getScope();
+            assert originalScope instanceof FileScope;
+            FileScope originalFileScope = (FileScope)originalScope;
+
+            // at this point, the memory space of the original file could still be uninitialized
+            IMemorySpace originalFileMemorySpace;
+            if (!this.fileScopeToMemorySpace.containsKey(originalFileScope)) {
+                originalFileMemorySpace = initializeFileMemorySpace(originalFileScope);
+            } else {
+                originalFileMemorySpace = this.fileScopeToMemorySpace.get(originalFileScope);
+            }
+            return originalFileMemorySpace.resolve(originalType.getName());
+        }
 
         return this.getCurrentMemorySpace().resolve(node.getName(), true);
     }
