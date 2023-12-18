@@ -65,7 +65,7 @@ public class ImportAnalyzer implements AstVisitor<Void> {
         // check for well-formed-ness of path
         String pathString = ((StringNode)node.pathNode()).getValue();
         Path path = Path.of(pathString);
-        Path libPath = DSLInterpreter.libPath;
+        Path libPath = this.environment.libPath();
         Path filePath = Path.of(libPath.toString(), path.toString()).toAbsolutePath();
         Path realPath;
         try {

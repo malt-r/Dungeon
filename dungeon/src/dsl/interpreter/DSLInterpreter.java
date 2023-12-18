@@ -60,11 +60,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
     private final ArrayDeque<IMemorySpace> instanceMemoryStack;
     private final HashMap<FileScope, IMemorySpace> fileScopeToMemorySpace;
     private IMemorySpace globalSpace;
-    public static final Path relLibPath = Paths.get("dungeon/assets/scripts/lib");
-    public static final String scenarioSubDirName = "scenario";
-    public static final Path relScenarioPath = Paths.get(relLibPath + "/" + scenarioSubDirName);
-    public static final Path libPath = relLibPath.toAbsolutePath();
-    public static final Path scenarioPath = relScenarioPath.toAbsolutePath();
 
     private SymbolTable symbolTable() {
         return environment.getSymbolTable();
@@ -142,14 +137,26 @@ public class DSLInterpreter implements AstVisitor<Object> {
      */
     public DungeonConfig interpretEntryPoint(DSLEntryPoint entryPoint) {
         var environment = new GameEnvironment();
+        return interpretEntryPoint(entryPoint, environment);
+    }
+
+    /**
+     * Create a {@link DungeonConfig} instance for given {@link DSLEntryPoint}, this will reset the
+     * environment of this {@link DSLInterpreter}
+     *
+     * @param entryPoint the {@link DSLEntryPoint} to interpret.
+     * @param environment the {@link IEnvironment} to use
+     * @return the interpreted {@link DungeonConfig}.
+     */
+    public DungeonConfig interpretEntryPoint(DSLEntryPoint entryPoint, IEnvironment environment) {
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
         semanticAnalyzer.setup(environment);
 
         // TODO: scan lib path (hacky)..
-        File libraryPath = new File(libPath.toString());
+        File libraryPath = new File(environment.libPath().toString());
 
         if (libraryPath.exists() && libraryPath.isDirectory()) {
-            FileFilter scenarioDirFilter = file -> file.isDirectory() && file.getName().equals(scenarioSubDirName);
+            FileFilter scenarioDirFilter = file -> file.isDirectory() && file.getName().equals(environment.scenarioSubDirName());
             var optScenarioDir =  Arrays.stream(libraryPath.listFiles(scenarioDirFilter)).findFirst();
             if (optScenarioDir.isPresent()) {
                 FileFilter scenarioFileFilter = file -> file.isFile() && file.getPath().endsWith(".dng");
@@ -493,7 +500,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         // scan for scenario builders in scenario lib files
         var files = this.environment.getFileScopes().keySet();
-        var scenarioFiles = files.stream().filter(p -> p != null && p.toString().contains(relScenarioPath.toString())).toList();
+        var scenarioFiles = files.stream().filter(p -> p != null && p.toString().contains(this.environment.relScenarioPath().toString())).toList();
 
         for (var scenarioFile : scenarioFiles) {
             IScope fileScope = this.environment.getFileScope(scenarioFile);

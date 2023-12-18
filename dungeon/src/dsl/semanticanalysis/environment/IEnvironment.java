@@ -12,6 +12,7 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.IType;
 
 import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,4 +101,24 @@ public interface IEnvironment {
     }
 
     RuntimeObjectTranslator getRuntimeObjectTranslator();
+
+    default Path relLibPath() {
+        return Paths.get("dungeon/assets/scripts/lib");
+    }
+
+    default String scenarioSubDirName() {
+        return "scenario";
+    }
+
+    default Path relScenarioPath() {
+        return Paths.get(relLibPath() + "/" + scenarioSubDirName());
+    }
+
+    default Path libPath() {
+        return relLibPath().toAbsolutePath();
+    }
+
+    default Path scenarioPath() {
+        return relScenarioPath().toAbsolutePath();
+    }
 }
