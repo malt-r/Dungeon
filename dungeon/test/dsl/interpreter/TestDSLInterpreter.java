@@ -63,6 +63,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class TestDSLInterpreter {
+    private static final Path testLibPath = Path.of("dungeon/test_resources/testlib");
+
     /** Tests, if a native function call is evaluated by the DSLInterpreter */
     @Test
     public void funcCall() {
@@ -4083,9 +4085,9 @@ public class TestDSLInterpreter {
             }
             """;
 
-        var env = new GameEnvironment();
+        var env = new GameEnvironment(testLibPath);
         var interpreter = new DSLInterpreter();
-        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
         var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
         var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
 
@@ -4141,9 +4143,9 @@ public class TestDSLInterpreter {
             }
             """;
 
-        var env = new GameEnvironment();
+        var env = new GameEnvironment(testLibPath);
         var interpreter = new DSLInterpreter();
-        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
         var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
         var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
 
@@ -4202,8 +4204,9 @@ public class TestDSLInterpreter {
             }
             """;
 
+        var env = new GameEnvironment(testLibPath);
         var interpreter = new DSLInterpreter();
-        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
         var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
         var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
 

@@ -3,6 +3,7 @@ package dsl.interpreter;
 import antlr.main.DungeonDSLLexer;
 import antlr.main.DungeonDSLParser;
 
+import core.Game;
 import dsl.interpreter.taskgraph.Interpreter;
 import dsl.parser.DungeonASTConverter;
 import dsl.parser.ast.*;
@@ -621,9 +622,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * further evaluation and interpretation.
      *
      * @param configScript The script (in the DungeonDSL) to parse
+     * @param environment The environment to use
      * @return The first questConfig object found in the configScript
      */
-    public Object getQuestConfig(String configScript) {
+    public Object getQuestConfig(String configScript, IEnvironment environment) {
+        // TODO: make relLibPath settable (or make the Environment settable)
         var stream = CharStreams.fromString(configScript);
         var lexer = new DungeonDSLLexer(stream);
 
@@ -634,7 +637,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
         DungeonASTConverter astConverter = new DungeonASTConverter();
         var programAST = astConverter.walk(programParseTree);
 
-        var environment = new GameEnvironment();
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
         semanticAnalyzer.setup(environment);
         var result = semanticAnalyzer.walk(programAST);
@@ -645,6 +647,17 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         Value questConfigValue = (Value) generateQuestConfig(programAST, pf);
         return questConfigValue.getInternalValue();
+    }
+
+    /**
+     * Parse the config script and return the questConfig object, which serves as an entry point for
+     * further evaluation and interpretation.
+     *
+     * @param configScript The script (in the DungeonDSL) to parse
+     * @return The first questConfig object found in the configScript
+     */
+    public Object getQuestConfig(String configScript) {
+        return this.getQuestConfig(configScript, new GameEnvironment());
     }
 
     /**
