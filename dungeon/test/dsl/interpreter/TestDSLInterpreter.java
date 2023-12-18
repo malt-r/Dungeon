@@ -4165,4 +4165,52 @@ public class TestDSLInterpreter {
                 + System.lineSeparator(),
             output);
     }
+
+    @Test
+    public void testImportItemType() {
+        String program =
+            """
+            #import "test.dng":my_item_type as my_type
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var item : entity;
+                var content : task_content;
+                content = t.get_content().get(0);
+                item = build_quest_item(my_type, content);
+                place_quest_item(item, room_set);
+
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment();
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+        var ic = entity.fetch(ItemComponent.class).get();
+        Assert.assertEquals("1", ((Quiz.Content)((QuestItem)ic.item()).taskContentComponent().content()).content());
+    }
 }

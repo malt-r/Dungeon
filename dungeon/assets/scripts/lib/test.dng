@@ -15,3 +15,15 @@ entity_type my_ent_type {
         on_interaction: my_interaction_handler
     }
 }
+
+entity_type my_ent_type {
+    interaction_component {
+        on_interaction: my_interaction_handler
+    }
+}
+
+item_type my_item_type {
+    display_name: "Ein Itemtyp",
+    description: "Ja!",
+    texture_path: "items/book/wisdom_scroll.png"
+}
