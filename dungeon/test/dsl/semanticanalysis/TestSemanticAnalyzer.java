@@ -28,8 +28,10 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
 
 public class TestSemanticAnalyzer {
+    private static final Path testLibPath = Path.of("dungeon/test_resources/testlib");
 
     /** Test, if the name of symbols is set correctly */
     @Test
@@ -1212,7 +1214,7 @@ public class TestSemanticAnalyzer {
         var ast = Helpers.getASTFromString(program);
         SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
 
-        var env = new GameEnvironment();
+        var env = new GameEnvironment(testLibPath);
         symbolTableParser.setup(env);
         var symbolTable = symbolTableParser.walk(ast).symbolTable;
         var fileScope = env.getFileScope(null);
@@ -1240,7 +1242,7 @@ public class TestSemanticAnalyzer {
         var ast = Helpers.getASTFromString(program);
         SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
 
-        var env = new GameEnvironment();
+        var env = new GameEnvironment(testLibPath);
         symbolTableParser.setup(env);
         var symbolTable = symbolTableParser.walk(ast).symbolTable;
         var fileScope = env.getFileScope(null);
@@ -1268,7 +1270,7 @@ public class TestSemanticAnalyzer {
         var ast = Helpers.getASTFromString(program);
         SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
 
-        var env = new GameEnvironment();
+        var env = new GameEnvironment(testLibPath);
         symbolTableParser.setup(env);
         try {
             var symbolTable = symbolTableParser.walk(ast).symbolTable;

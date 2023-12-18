@@ -4202,7 +4202,6 @@ public class TestDSLInterpreter {
             }
             """;
 
-        var env = new GameEnvironment();
         var interpreter = new DSLInterpreter();
         DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
         var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();

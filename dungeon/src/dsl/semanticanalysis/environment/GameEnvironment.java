@@ -80,6 +80,46 @@ public class GameEnvironment implements IEnvironment {
     protected final Scope globalScope;
     protected final HashMap<Path, FileScope> fileScopes = new HashMap<>();
     protected final RuntimeObjectTranslator runtimeObjectTranslator = new RuntimeObjectTranslator();
+    protected final Path relLibPath;
+
+    /**
+     * Constructor. Creates fresh global scope and symbol table and binds built in types and native
+     * functions
+     * @param relLibPath relative path to search lib files in
+     */
+    public GameEnvironment(Path relLibPath) {
+        this.relLibPath = relLibPath;
+
+        this.typeBuilder = new TypeBuilder();
+        this.globalScope = new Scope();
+        this.symbolTable = new SymbolTable(this.globalScope);
+
+        bindBuiltInTypes();
+
+        registerDefaultTypeAdapters();
+        registerDefaultRuntimeObjectTranslators();
+        bindBuiltInAggregateTypes();
+
+        bindBuiltInProperties();
+        bindBuiltInMethods();
+
+        // create built in types and native functions
+        this.NATIVE_FUNCTIONS = buildNativeFunctions();
+        bindNativeFunctions();
+    }
+
+    /**
+     * Constructor. Creates fresh global scope and symbol table and binds built in types and native
+     * functions
+     */
+    public GameEnvironment() {
+        this(IEnvironment.defaultRelLibPath);
+    }
+
+    @Override
+    public Path relLibPath() {
+        return this.relLibPath;
+    }
 
     public Class<?>[] getBuiltInAggregateTypeClasses() {
         return (Class<?>[])
@@ -160,28 +200,6 @@ public class GameEnvironment implements IEnvironment {
         return typeBuilder;
     }
 
-    /**
-     * Constructor. Creates fresh global scope and symbol table and binds built in types and native
-     * functions
-     */
-    public GameEnvironment() {
-        this.typeBuilder = new TypeBuilder();
-        this.globalScope = new Scope();
-        this.symbolTable = new SymbolTable(this.globalScope);
-
-        bindBuiltInTypes();
-
-        registerDefaultTypeAdapters();
-        registerDefaultRuntimeObjectTranslators();
-        bindBuiltInAggregateTypes();
-
-        bindBuiltInProperties();
-        bindBuiltInMethods();
-
-        // create built in types and native functions
-        this.NATIVE_FUNCTIONS = buildNativeFunctions();
-        bindNativeFunctions();
-    }
 
     protected void registerDefaultTypeAdapters() {
         typeBuilder.registerTypeAdapter(DrawComponentAdapter.class, this.globalScope);
