@@ -107,6 +107,13 @@ public class ImportAnalyzer implements AstVisitor<Void> {
             throw new RuntimeException("Cannot resolve symbol with name '" + symbolName + "'");
         }
 
+        if (symbol instanceof ImportAggregateTypeSymbol || symbol instanceof ImportFunctionSymbol) {
+            // if the resolved symbol is itself an imported symbol, we throw an exception for now
+            // this has the effect, that the imported and maybe renamed symbols of a filescope
+            // cannot be imported by another file -> no chained importing
+            throw new RuntimeException("Importing an imported symbol is not allowed!");
+        }
+
         Symbol importSymbol;
         // create import symbol
         if (symbol instanceof AggregateType aggregateType) {

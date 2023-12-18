@@ -1256,4 +1256,25 @@ public class TestSemanticAnalyzer {
         Symbol member = originalType.resolve("interaction_component");
         Assert.assertEquals(originalType, member.getScope());
     }
+
+    @Test
+    public void testBlockImportImportedType() {
+        String program =
+            """
+            #import "test.dng":my_imported_type as my_type
+            """;
+
+        // setup
+        var ast = Helpers.getASTFromString(program);
+        SemanticAnalyzer symbolTableParser = new SemanticAnalyzer();
+
+        var env = new GameEnvironment();
+        symbolTableParser.setup(env);
+        try {
+            var symbolTable = symbolTableParser.walk(ast).symbolTable;
+            Assert.fail("Semantic analysis is supposed to throw an exception!");
+        } catch (RuntimeException ex) {
+            Assert.assertEquals("Importing an imported symbol is not allowed!", ex.getMessage());
+        }
+    }
 }

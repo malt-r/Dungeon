@@ -1,3 +1,5 @@
+#import "export.dng":my_exported_type as my_imported_type
+
 fn test_fn() {
     print("Hello, World!");
 }
