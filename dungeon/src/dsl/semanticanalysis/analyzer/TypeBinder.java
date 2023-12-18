@@ -11,7 +11,7 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.*;
 public class TypeBinder implements AstVisitor<Object> {
 
     private StringBuilder errorStringBuilder;
-    //private IEnvironment environment;
+    // private IEnvironment environment;
     private IScope scope;
     private SymbolTable symbolTable;
 
@@ -28,8 +28,11 @@ public class TypeBinder implements AstVisitor<Object> {
      * @param errorStringBuilder a string builder to which errors will be appended
      */
     public void bindTypes(
-            IEnvironment environment, IScope scope, Node rootNode, StringBuilder errorStringBuilder) {
-        //this.environment = environment;
+            IEnvironment environment,
+            IScope scope,
+            Node rootNode,
+            StringBuilder errorStringBuilder) {
+        // this.environment = environment;
         this.symbolTable = environment.getSymbolTable();
         this.scope = scope;
         this.errorStringBuilder = errorStringBuilder;
@@ -121,7 +124,7 @@ public class TypeBinder implements AstVisitor<Object> {
             symbolTable().addSymbolNodeRelation(memberSymbol, propertyDefinitionNode, true);
         }
 
-        //this.environment.loadTypes(itemType);
+        // this.environment.loadTypes(itemType);
         this.scope.bind(itemType);
         return itemType;
     }
@@ -159,7 +162,8 @@ public class TypeBinder implements AstVisitor<Object> {
                 innerTypeNode.accept(this);
             }
             var innerType = (IType) scopeToResolveTypeIn.resolve(innerTypeNode.getName());
-            Symbol listTypeSymbol = scopeToResolveTypeIn.resolve(ListType.getListTypeName(innerType));
+            Symbol listTypeSymbol =
+                    scopeToResolveTypeIn.resolve(ListType.getListTypeName(innerType));
             if (listTypeSymbol.equals(Symbol.NULL)) {
                 IScope globalScope = this.symbolTable.globalScope();
                 ListType listType = new ListType(innerType, globalScope);

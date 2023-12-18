@@ -19,7 +19,8 @@ public class ImportAggregateTypeSymbol extends AggregateType {
         this.originalTypeSymbol = originalTypeSymbol;
     }
 
-    public ImportAggregateTypeSymbol(AggregateType originalTypeSymbol, String name, IScope parentScope) {
+    public ImportAggregateTypeSymbol(
+            AggregateType originalTypeSymbol, String name, IScope parentScope) {
         super(name, parentScope);
         this.originalTypeSymbol = originalTypeSymbol;
     }

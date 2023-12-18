@@ -85,6 +85,7 @@ public class GameEnvironment implements IEnvironment {
     /**
      * Constructor. Creates fresh global scope and symbol table and binds built in types and native
      * functions
+     *
      * @param relLibPath relative path to search lib files in
      */
     public GameEnvironment(Path relLibPath) {
@@ -199,7 +200,6 @@ public class GameEnvironment implements IEnvironment {
     public TypeBuilder getTypeBuilder() {
         return typeBuilder;
     }
-
 
     protected void registerDefaultTypeAdapters() {
         typeBuilder.registerTypeAdapter(DrawComponentAdapter.class, this.globalScope);

@@ -3,6 +3,7 @@ package dsl.interpreter;
 import dsl.semanticanalysis.scope.IScope;
 import dsl.semanticanalysis.symbol.FunctionSymbol;
 import dsl.semanticanalysis.typesystem.typebuilding.type.AggregateType;
+
 import entrypoint.DSLEntryPoint;
 import entrypoint.DungeonConfig;
 
@@ -146,7 +147,10 @@ public class TetsDSLEntryPointFinder {
 
         var rtEnv = interpreter.getRuntimeEnvironment();
         var fileScopes = rtEnv.getFileScopes();
-        var scenarioFileSet = fileScopes.keySet().stream().filter(p -> p.toString().contains(rtEnv.relScenarioPath().toString())).toList();
+        var scenarioFileSet =
+                fileScopes.keySet().stream()
+                        .filter(p -> p.toString().contains(rtEnv.relScenarioPath().toString()))
+                        .toList();
         Assert.assertFalse(scenarioFileSet.isEmpty());
 
         var scenarioFilePath = Path.of(rtEnv.scenarioPath() + "/scenarios.dng");

@@ -3,7 +3,6 @@ package dsl.interpreter;
 import antlr.main.DungeonDSLLexer;
 import antlr.main.DungeonDSLParser;
 
-import core.Game;
 import dsl.interpreter.taskgraph.Interpreter;
 import dsl.parser.DungeonASTConverter;
 import dsl.parser.ast.*;
@@ -32,8 +31,8 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.*;
 import entrypoint.DSLEntryPoint;
 import entrypoint.DSLFileLoader;
 import entrypoint.DungeonConfig;
-
 import entrypoint.ParsedFile;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
@@ -45,7 +44,6 @@ import task.tasktype.Quiz;
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 // TODO: specify EXACT semantics of value copying and setting
@@ -93,23 +91,24 @@ public class DSLInterpreter implements AstVisitor<Object> {
     }
 
     /**
-     * Set the execution context for the DSLInterpreter (load the memoryspace associated with
-     * the passed file with {@link Path}
+     * Set the execution context for the DSLInterpreter (load the memoryspace associated with the
+     * passed file with {@link Path}
      *
      * @param filePath the path of the file to set as context
      */
     public void setContextFileByPath(Path filePath) {
         IScope scope = this.environment.getFileScope(filePath);
         if (scope.equals(Scope.NULL)) {
-            throw new RuntimeException("No file scope associated with the passed filePath '"  + filePath + "'");
+            throw new RuntimeException(
+                    "No file scope associated with the passed filePath '" + filePath + "'");
         }
         FileScope fileScope = (FileScope) scope;
         setContextFileScope(fileScope);
     }
 
     /**
-     * Set the execution context for the DSLInterpreter (load the memoryspace associated with
-     * the passed {@link FileScope})
+     * Set the execution context for the DSLInterpreter (load the memoryspace associated with the
+     * passed {@link FileScope})
      *
      * @param fileScope the fileScope of the file to set as context
      */
@@ -120,7 +119,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
     }
 
     /**
-     * Pops all file memory spaces and all memoryspaces on memory stack until only the global space remains.
+     * Pops all file memory spaces and all memoryspaces on memory stack until only the global space
+     * remains.
      */
     public void resetFileContext() {
         this.fileMemoryStack.clear();
@@ -157,10 +157,15 @@ public class DSLInterpreter implements AstVisitor<Object> {
         File libraryPath = new File(environment.libPath().toString());
 
         if (libraryPath.exists() && libraryPath.isDirectory()) {
-            FileFilter scenarioDirFilter = file -> file.isDirectory() && file.getName().equals(environment.scenarioSubDirName());
-            var optScenarioDir =  Arrays.stream(libraryPath.listFiles(scenarioDirFilter)).findFirst();
+            FileFilter scenarioDirFilter =
+                    file ->
+                            file.isDirectory()
+                                    && file.getName().equals(environment.scenarioSubDirName());
+            var optScenarioDir =
+                    Arrays.stream(libraryPath.listFiles(scenarioDirFilter)).findFirst();
             if (optScenarioDir.isPresent()) {
-                FileFilter scenarioFileFilter = file -> file.isFile() && file.getPath().endsWith(".dng");
+                FileFilter scenarioFileFilter =
+                        file -> file.isFile() && file.getPath().endsWith(".dng");
                 var scenarioDir = optScenarioDir.get();
                 var scenarioFiles = scenarioDir.listFiles(scenarioFileFilter);
 
@@ -172,7 +177,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
                     var programAST = DungeonASTConverter.getProgramAST(content);
                     ParsedFile parsedFile = new ParsedFile(filePath, programAST);
 
-                    environment.addFileScope(new FileScope(parsedFile, environment.getGlobalScope()));
+                    environment.addFileScope(
+                            new FileScope(parsedFile, environment.getGlobalScope()));
                     semanticAnalyzer.walk(parsedFile);
                 }
             }
@@ -208,7 +214,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return this.fileScopeToMemorySpace.get(fs);
     }
 
-    //region prototypes
+    // region prototypes
 
     /**
      * Creates {@link PrototypeValue} instances for all `entity_type` and `item_type` definitions in
@@ -232,7 +238,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
         // TODO: needs to be scoped...
 
         // iterate over all types
-        var types = scope.getSymbols().stream().filter(s -> s instanceof IType).map(s -> (IType)s).toList();
+        var types =
+                scope.getSymbols().stream()
+                        .filter(s -> s instanceof IType)
+                        .map(s -> (IType) s)
+                        .toList();
         for (var type : types) {
             if (type.getTypeKind().equals(IType.Kind.Aggregate)) {
                 // if the type has a creation node, it is user defined, and we need to
@@ -251,10 +261,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
                         prototype.addDefaultValue(compDefNode.getIdName(), componentPrototype);
                     }
                     // needs to be added to file-memoryspace, not the environment
-                    //this.environment.addPrototype(prototype);
+                    // this.environment.addPrototype(prototype);
                     // TODO: needs to use current file-memoryspace
                     this.getCurrentMemorySpace().bindValue(prototype.getName(), prototype);
-                    //this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
+                    // this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
                 }
             }
         }
@@ -270,7 +280,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
      */
     public void createItemPrototypes(IEnvironment environment, IScope scope) {
         // iterate over all types
-        var types = scope.getSymbols().stream().filter(s -> s instanceof IType).map(s -> (IType)s).toList();
+        var types =
+                scope.getSymbols().stream()
+                        .filter(s -> s instanceof IType)
+                        .map(s -> (IType) s)
+                        .toList();
         for (var type : types) {
             if (type.getTypeKind().equals(IType.Kind.Aggregate)) {
                 // if the type has a creation node, it is user defined, and we need to
@@ -280,7 +294,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
                     var prototype =
                             createItemPrototype((ItemPrototypeDefinitionNode) creationAstNode);
 
-                    //this.environment.addPrototype(prototype);
+                    // this.environment.addPrototype(prototype);
                     // this.getGlobalMemorySpace().bindValue(prototype.getName(), prototype);
                     this.getCurrentMemorySpace().bindValue(prototype.getName(), prototype);
                 }
@@ -494,14 +508,24 @@ public class DSLInterpreter implements AstVisitor<Object> {
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
-        FileScope fs = (FileScope)environment.getFileScope(entryPointFilePath);
+        FileScope fs = (FileScope) environment.getFileScope(entryPointFilePath);
         this.environment = new RuntimeEnvironment(environment, this, fs);
 
         initializeScenarioBuilderStorage();
 
         // scan for scenario builders in scenario lib files
         var files = this.environment.getFileScopes().keySet();
-        var scenarioFiles = files.stream().filter(p -> p != null && p.toString().contains(this.environment.relScenarioPath().toString())).toList();
+        var scenarioFiles =
+                files.stream()
+                        .filter(
+                                p ->
+                                        p != null
+                                                && p.toString()
+                                                        .contains(
+                                                                this.environment
+                                                                        .relScenarioPath()
+                                                                        .toString()))
+                        .toList();
 
         for (var scenarioFile : scenarioFiles) {
             IScope fileScope = this.environment.getFileScope(scenarioFile);
@@ -664,12 +688,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @param programAST The AST of the DSL program to generate a quest config object from
      * @return the object, which represents the quest config of the passed DSL program. The type of
      *     this object depends on the Class, which is set up as the 'quest_config' type in the
-     *     {@link IEnvironment} used by the DSLInterpreter (set by {@link #initializeRuntime(IEnvironment, FileScope)})
+     *     {@link IEnvironment} used by the DSLInterpreter (set by {@link
+     *     #initializeRuntime(IEnvironment, FileScope)})
      */
     public Object generateQuestConfig(Node programAST, ParsedFile parsedFile) {
         IScope fs = this.environment.getFileScope(parsedFile.filePath());
 
-        var filesMemorySpace = initializeFileMemorySpace((FileScope)fs);
+        var filesMemorySpace = initializeFileMemorySpace((FileScope) fs);
         this.memoryStack.push(filesMemorySpace);
         this.fileMemoryStack.push(filesMemorySpace);
 
@@ -721,7 +746,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             throw new RuntimeException("Scope for file '" + pf.filePath() + "' is null");
         }
 
-        FileScope fs = (FileScope)scope;
+        FileScope fs = (FileScope) scope;
 
         IMemorySpace fileMemorySpace = initializeFileMemorySpace(fs);
         this.memoryStack.push(fileMemorySpace);
@@ -829,8 +854,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
     //
     @Override
     public Object visit(PrototypeDefinitionNode node) {
-        // TODO: does this need to be specially treated? could this not be the normal resolving of types?
-        //return this.environment.lookupPrototype(node.getIdName());
+        // TODO: does this need to be specially treated? could this not be the normal resolving of
+        // types?
+        // return this.environment.lookupPrototype(node.getIdName());
         boolean b = true;
         return this.getCurrentMemorySpace().resolve(node.getIdName());
     }
@@ -950,7 +976,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             AggregateType originalType = aggregateTypeSymbol.originalTypeSymbol();
             IScope originalScope = originalType.getScope();
             assert originalScope instanceof FileScope;
-            FileScope originalFileScope = (FileScope)originalScope;
+            FileScope originalFileScope = (FileScope) originalScope;
 
             // at this point, the memory space of the original file could still be uninitialized
             IMemorySpace originalFileMemorySpace;
@@ -1645,7 +1671,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
         if (callable.getCallableType().equals(ICallable.Type.Native)) {
             NativeFunction func = (NativeFunction) callable;
 
-            IMemorySpace functionMemorySpace = createFunctionMemorySpace(func, this.getCurrentMemorySpace());
+            IMemorySpace functionMemorySpace =
+                    createFunctionMemorySpace(func, this.getCurrentMemorySpace());
             setupFunctionParametersRaw(func, functionMemorySpace, parameterObjects);
 
             // create mock ID-nodes
@@ -1664,7 +1691,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
         } else if (callable.getCallableType().equals(ICallable.Type.UserDefined)) {
             FunctionSymbol functionSymbol = (FunctionSymbol) callable;
 
-            Object retObject = executeUserDefinedFunctionRawParameters(functionSymbol, parameterObjects);
+            Object retObject =
+                    executeUserDefinedFunctionRawParameters(functionSymbol, parameterObjects);
             return retObject;
         }
         return null;
@@ -1681,7 +1709,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             FunctionSymbol symbol, List<Object> parameterObjects) {
         IScope scope = symbol.getScope();
         assert scope instanceof FileScope;
-        FileScope fs = (FileScope)scope;
+        FileScope fs = (FileScope) scope;
         boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
 
         IMemorySpace functionsParentMS;
@@ -1729,7 +1757,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         // TODO: check client code for duplicate file memory space checking
         IScope scope = symbol.getScope();
         assert scope instanceof FileScope;
-        FileScope fs = (FileScope)scope;
+        FileScope fs = (FileScope) scope;
         boolean otherFileMSOnTop = isDifferentMemorySpaceOnTop(fs);
 
         IMemorySpace functionsParentMS;
@@ -1831,7 +1859,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @param functionSymbol The Symbol representing the function definition
      * @return The created IMemorySpace
      */
-    private IMemorySpace createFunctionMemorySpace(ScopedSymbol functionSymbol, IMemorySpace parentSpace) {
+    private IMemorySpace createFunctionMemorySpace(
+            ScopedSymbol functionSymbol, IMemorySpace parentSpace) {
 
         // push new memorySpace and parameters on spaceStack
         var functionMemSpace = new MemorySpace(parentSpace);

@@ -17,7 +17,6 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.IType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Map;
 
 // this extends the normal IEnvironment definition by storing prototypes
 // which are basically evaluated type definitions (of game objects)
@@ -42,7 +41,8 @@ public class RuntimeEnvironment implements IEnvironment {
      *
      * @param other the other environment to create a new RuntimeEnvironment from
      */
-    public RuntimeEnvironment(IEnvironment other, DSLInterpreter interpreter, FileScope entryPointFileScope) {
+    public RuntimeEnvironment(
+            IEnvironment other, DSLInterpreter interpreter, FileScope entryPointFileScope) {
         this.symbolTable = other.getSymbolTable();
         this.typeBuilder = other.getTypeBuilder();
 
@@ -97,7 +97,7 @@ public class RuntimeEnvironment implements IEnvironment {
     }
 
     @Override
-    public void addFileScope(FileScope fileScope) { }
+    public void addFileScope(FileScope fileScope) {}
 
     @Override
     public IScope getFileScope(Path file) {

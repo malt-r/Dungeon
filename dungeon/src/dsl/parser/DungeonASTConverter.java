@@ -112,9 +112,7 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     }
 
     @Override
-    public void enterImport_named(DungeonDSLParser.Import_namedContext ctx) {
-
-    }
+    public void enterImport_named(DungeonDSLParser.Import_namedContext ctx) {}
 
     @Override
     public void exitImport_named(DungeonDSLParser.Import_namedContext ctx) {
@@ -130,7 +128,6 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
         Node importNode = new ImportNode(pathNode, idNode, asIdNode);
         this.astStack.push(importNode);
     }
-
 
     @Override
     public void enterFn_def(DungeonDSLParser.Fn_defContext ctx) {}

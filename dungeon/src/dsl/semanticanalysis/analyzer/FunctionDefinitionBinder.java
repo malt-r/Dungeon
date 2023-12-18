@@ -26,7 +26,8 @@ public class FunctionDefinitionBinder implements AstVisitor<Void> {
      * @param symbolTable the symboltable to bind the function definitions in
      * @param programRootNode the root {@link Node} of the program containing function definitions
      */
-    public void bindFunctionDefinitions(SymbolTable symbolTable, IScope scope, Node programRootNode) {
+    public void bindFunctionDefinitions(
+            SymbolTable symbolTable, IScope scope, Node programRootNode) {
         this.symbolTable = symbolTable;
         this.rootScope = scope;
         this.scopeStack = new Stack<>();

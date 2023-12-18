@@ -33,10 +33,9 @@ import dsl.semanticanalysis.symbol.FunctionSymbol;
 import dsl.semanticanalysis.symbol.ScopedSymbol;
 import dsl.semanticanalysis.symbol.Symbol;
 import dsl.semanticanalysis.typesystem.typebuilding.type.*;
+
 import entrypoint.ParsedFile;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.Stack;
 // importing all required classes from symbolTable will be to verbose
 // CHECKSTYLE:OFF: AvoidStarImport

@@ -15,7 +15,6 @@ import dsl.helpers.Helpers;
 import dsl.interpreter.mockecs.*;
 import dsl.parser.ast.IdNode;
 import dsl.parser.ast.Node;
-import dsl.parser.ast.StringNode;
 import dsl.runtime.memoryspace.EncapsulatedObject;
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
@@ -34,8 +33,8 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.ListType;
 import dslinterop.dslnativefunction.NativeInstantiate;
 
 import entrypoint.DungeonConfig;
-
 import entrypoint.ParsedFile;
+
 import graph.taskdependencygraph.TaskDependencyGraph;
 import graph.taskdependencygraph.TaskEdge;
 import graph.taskdependencygraph.TaskNode;
@@ -57,7 +56,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -359,7 +357,7 @@ public class TestDSLInterpreter {
 
         IMemorySpace ms = interpreter.getEntryPointFileMemorySpace();
 
-        var typeWithDefaults = (PrototypeValue)ms.resolve("c");
+        var typeWithDefaults = (PrototypeValue) ms.resolve("c");
         assertNotEquals(PrototypeValue.NONE, typeWithDefaults);
 
         var firstCompWithDefaults = typeWithDefaults.getDefaultValue("test_component");
@@ -656,12 +654,7 @@ public class TestDSLInterpreter {
                         Entity.TestComponentWithExternalTypeProperty.instance);
         DSLInterpreter interpreter = new DSLInterpreter();
         Helpers.generateQuestConfigWithCustomTypes(
-                program,
-                env,
-                interpreter,
-                Entity.class,
-                TestComponent1.class,
-                ExternalType.class);
+                program, env, interpreter, Entity.class, TestComponent1.class, ExternalType.class);
 
         var globalMs = interpreter.getEntryPointFileMemorySpace();
         AggregateValue config = (AggregateValue) (globalMs.resolve("config"));
@@ -2579,7 +2572,7 @@ public class TestDSLInterpreter {
         interpreter.setContextFileByPath(null);
 
         // call the function
-        var value = (AggregateValue)interpreter.callCallable(instantiateFunc, List.of(node));
+        var value = (AggregateValue) interpreter.callCallable(instantiateFunc, List.of(node));
 
         // extract the entity from the Value-instance
         core.Entity entity = (core.Entity) value.getInternalValue();
@@ -2634,8 +2627,7 @@ public class TestDSLInterpreter {
 
         var fileScope = runtimeEnvironment.getFileScope(null);
 
-        FunctionSymbol fnSym =
-                (FunctionSymbol) fileScope.resolve("test_func");
+        FunctionSymbol fnSym = (FunctionSymbol) fileScope.resolve("test_func");
         interpreter.executeUserDefinedFunctionRawParameters(
                 fnSym, Arrays.stream(new Object[] {entity}).toList());
 
@@ -4045,7 +4037,7 @@ public class TestDSLInterpreter {
     @Test
     public void testImportFuncCall() {
         String program =
-            """
+                """
             #import "test.dng":test_fn as print_hello_world
 
             entity_type my_type {
@@ -4104,16 +4096,13 @@ public class TestDSLInterpreter {
         ic.triggerInteraction(entity, entity);
 
         String output = outputStream.toString();
-        assertEquals(
-            "Hello, World!"
-                + System.lineSeparator(),
-            output);
+        assertEquals("Hello, World!" + System.lineSeparator(), output);
     }
 
     @Test
     public void testImportEntityType() {
         String program =
-            """
+                """
             #import "test.dng":my_ent_type as my_type
 
             single_choice_task t1 {
@@ -4162,16 +4151,13 @@ public class TestDSLInterpreter {
         ic.triggerInteraction(entity, entity);
 
         String output = outputStream.toString();
-        assertEquals(
-            "my_interaction_handler"
-                + System.lineSeparator(),
-            output);
+        assertEquals("my_interaction_handler" + System.lineSeparator(), output);
     }
 
     @Test
     public void testImportItemType() {
         String program =
-            """
+                """
             #import "test.dng":my_item_type as my_type
 
             single_choice_task t1 {
@@ -4213,6 +4199,9 @@ public class TestDSLInterpreter {
         var entitySet = builtTask.iterator().next();
         var entity = entitySet.iterator().next();
         var ic = entity.fetch(ItemComponent.class).get();
-        Assert.assertEquals("1", ((Quiz.Content)((QuestItem)ic.item()).taskContentComponent().content()).content());
+        Assert.assertEquals(
+                "1",
+                ((Quiz.Content) ((QuestItem) ic.item()).taskContentComponent().content())
+                        .content());
     }
 }

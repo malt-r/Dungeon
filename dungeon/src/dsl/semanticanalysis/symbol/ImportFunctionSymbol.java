@@ -11,12 +11,17 @@ import java.util.List;
 
 public class ImportFunctionSymbol extends FunctionSymbol {
     private final FunctionSymbol originalSymbol;
-    public FunctionSymbol originalFunctionSymbol(){
+
+    public FunctionSymbol originalFunctionSymbol() {
         return originalSymbol;
     }
 
     public ImportFunctionSymbol(FunctionSymbol originalSymbol, IScope parentScope) {
-        super(originalSymbol.getName(), parentScope, originalSymbol.getAstRootNode(), originalSymbol.getFunctionType());
+        super(
+                originalSymbol.getName(),
+                parentScope,
+                originalSymbol.getAstRootNode(),
+                originalSymbol.getFunctionType());
         this.originalSymbol = originalSymbol;
     }
 

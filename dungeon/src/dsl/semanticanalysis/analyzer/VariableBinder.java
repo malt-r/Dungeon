@@ -179,6 +179,7 @@ public class VariableBinder implements AstVisitor<Void> {
     public Void visit(ImportNode node) {
         return null;
     }
+
     @Override
     public Void visit(DecNumNode node) {
         return null;

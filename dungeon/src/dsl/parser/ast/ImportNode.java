@@ -12,6 +12,7 @@ public class ImportNode extends Node {
     }
 
     protected final Type type;
+
     public Type importType() {
         return type;
     }

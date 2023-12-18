@@ -1,6 +1,5 @@
 package dsl.semanticanalysis;
 
-import core.Game;
 import dsl.helpers.Helpers;
 import dsl.interpreter.DummyNativeFunction;
 import dsl.interpreter.TestEnvironment;
@@ -297,14 +296,10 @@ public class TestSemanticAnalyzer {
         var symtableResult = Helpers.getSymtableForASTWithCustomEnvironment(ast, env);
         var fileScope = env.getFileScope(null);
 
-        var funcSymbol =
-                (FunctionSymbol) fileScope.resolve("test_func");
+        var funcSymbol = (FunctionSymbol) fileScope.resolve("test_func");
         Assert.assertEquals("test_func", funcSymbol.getName());
 
-        IType functionType =
-                (IType)
-                        fileScope.resolve(
-                                "$fn(int, float, string) -> int$");
+        IType functionType = (IType) fileScope.resolve("$fn(int, float, string) -> int$");
         Assert.assertEquals(functionType, funcSymbol.getDataType());
         Assert.assertEquals(ICallable.Type.UserDefined, funcSymbol.getCallableType());
         Assert.assertNotEquals(Symbol.NULL, funcSymbol.resolve("param1"));
@@ -356,10 +351,8 @@ public class TestSemanticAnalyzer {
         var symtableResult = Helpers.getSymtableForASTWithCustomEnvironment(ast, env);
         var fileScope = env.getFileScope(null);
 
-        var funcSymbol1 =
-                (FunctionSymbol) fileScope.resolve("test_func_1");
-        var funcSymbol2 =
-                (FunctionSymbol) fileScope.resolve("test_func_2");
+        var funcSymbol1 = (FunctionSymbol) fileScope.resolve("test_func_1");
+        var funcSymbol2 = (FunctionSymbol) fileScope.resolve("test_func_2");
         Assert.assertEquals(funcSymbol1.getDataType(), funcSymbol2.getDataType());
     }
 
@@ -380,11 +373,9 @@ public class TestSemanticAnalyzer {
         var symtableResult = Helpers.getSymtableForASTWithCustomEnvironment(ast, env);
         var fileScope = env.getFileScope(null);
 
-        var funcSymbol1 =
-                (FunctionSymbol) fileScope.resolve("test_func_1");
+        var funcSymbol1 = (FunctionSymbol) fileScope.resolve("test_func_1");
         var funcType1 = funcSymbol1.getDataType();
-        var funcSymbol2 =
-                (FunctionSymbol) fileScope.resolve("test_func_2");
+        var funcSymbol2 = (FunctionSymbol) fileScope.resolve("test_func_2");
         var funcType2 = funcSymbol2.getDataType();
         Assert.assertEquals(funcType1.hashCode(), funcType2.hashCode());
     }
@@ -695,8 +686,7 @@ public class TestSemanticAnalyzer {
         var symbolsForMethodCall = symbolTable.getSymbolsForAstNode(methodCallNode);
         Assert.assertEquals(1, symbolsForMethodCall.size());
 
-        AggregateType testComponent2Type =
-                (AggregateType) fileScope.resolveType("test_component2");
+        AggregateType testComponent2Type = (AggregateType) fileScope.resolveType("test_component2");
         Symbol methodDeclSymbol = testComponent2Type.resolve("my_method");
 
         var symbolForMethodCall = symbolsForMethodCall.get(0);
@@ -749,8 +739,7 @@ public class TestSemanticAnalyzer {
         var symbolTable = result.symbolTable;
         var fileScope = env.getFileScope(null);
 
-        FunctionSymbol funcSymbol =
-                (FunctionSymbol) fileScope.resolve("get_property");
+        FunctionSymbol funcSymbol = (FunctionSymbol) fileScope.resolve("get_property");
         FuncDefNode funcDefNode = (FuncDefNode) symbolTable.getCreationAstNode(funcSymbol);
         VarDeclNode declNode = (VarDeclNode) funcDefNode.getStmtBlock().getChild(0).getChild(0);
         Symbol testVariableSymbol = symbolTable.getSymbolsForAstNode(declNode).get(0);
@@ -1206,7 +1195,7 @@ public class TestSemanticAnalyzer {
     @Test
     public void testImportFunc() {
         String program =
-            """
+                """
             #import "test.dng":test_fn_param as my_func
             """;
 
@@ -1233,8 +1222,7 @@ public class TestSemanticAnalyzer {
 
     @Test
     public void testImportType() {
-        String program =
-            """
+        String program = """
             #import "test.dng":my_ent_type as my_type
             """;
 
@@ -1262,7 +1250,7 @@ public class TestSemanticAnalyzer {
     @Test
     public void testBlockImportImportedType() {
         String program =
-            """
+                """
             #import "test.dng":my_imported_type as my_type
             """;
 

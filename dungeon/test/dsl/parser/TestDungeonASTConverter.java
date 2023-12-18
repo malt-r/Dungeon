@@ -1129,8 +1129,7 @@ public class TestDungeonASTConverter {
     @Test
     public void testImportStmtUnnamed() {
 
-        String program =
-            """
+        String program = """
             #import "hello.dng":moin
             """;
 
@@ -1154,8 +1153,7 @@ public class TestDungeonASTConverter {
     @Test
     public void testImportStmtNamed() {
 
-        String program =
-            """
+        String program = """
             #import "hello.dng":kuckuck as no
             """;
 
