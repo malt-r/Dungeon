@@ -63,7 +63,8 @@ public class ImportAnalyzer implements AstVisitor<Void> {
         // TODO: should handle missing ".dng" file-extension
 
         // check for well-formed-ness of path
-        Path path = Path.of("test.dng");
+        String pathString = ((StringNode)node.pathNode()).getValue();
+        Path path = Path.of(pathString);
         Path libPath = DSLInterpreter.libPath;
         Path filePath = Path.of(libPath.toString(), path.toString()).toAbsolutePath();
         Path realPath;
