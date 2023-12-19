@@ -137,6 +137,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
      * @return the interpreted {@link DungeonConfig}.
      */
     public DungeonConfig interpretEntryPoint(DSLEntryPoint entryPoint) {
+        // TODO: could add information about the file being loaded from a jar file
         var environment = new GameEnvironment();
         return interpretEntryPoint(entryPoint, environment);
     }
