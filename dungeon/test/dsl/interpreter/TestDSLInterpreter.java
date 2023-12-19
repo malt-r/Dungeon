@@ -3,6 +3,7 @@ package dsl.interpreter;
 import static org.junit.Assert.*;
 
 import contrib.components.CollideComponent;
+import contrib.components.InteractionComponent;
 import contrib.components.InventoryComponent;
 import contrib.components.ItemComponent;
 
@@ -15,6 +16,7 @@ import dsl.interpreter.mockecs.*;
 import dsl.parser.ast.IdNode;
 import dsl.parser.ast.Node;
 import dsl.runtime.memoryspace.EncapsulatedObject;
+import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
 import dsl.runtime.value.PrototypeValue;
 import dsl.runtime.value.Value;
@@ -31,6 +33,7 @@ import dsl.semanticanalysis.typesystem.typebuilding.type.ListType;
 import dslinterop.dslnativefunction.NativeInstantiate;
 
 import entrypoint.DungeonConfig;
+import entrypoint.ParsedFile;
 
 import graph.taskdependencygraph.TaskDependencyGraph;
 import graph.taskdependencygraph.TaskEdge;
@@ -46,16 +49,20 @@ import task.game.content.QuestItem;
 import task.tasktype.AssignTask;
 import task.tasktype.Element;
 import task.tasktype.Quiz;
+import task.tasktype.quizquestion.SingleChoice;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class TestDSLInterpreter {
+    private static final Path testLibPath = Path.of("dungeon/test_resources/testlib");
+
     /** Tests, if a native function call is evaluated by the DSLInterpreter */
     @Test
     public void funcCall() {
@@ -91,15 +98,16 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile latestParsedFile = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, latestParsedFile.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, latestParsedFile);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
     }
@@ -125,15 +133,16 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, pf.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, pf);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
     }
@@ -160,15 +169,16 @@ public class TestDSLInterpreter {
         symbolTableParser.setup(env);
         var ast = Helpers.getASTFromString(program);
         symbolTableParser.walk(ast);
+        ParsedFile pf = symbolTableParser.latestParsedFile;
 
         DSLInterpreter interpreter = new DSLInterpreter();
-        interpreter.initializeRuntime(env);
+        interpreter.initializeRuntime(env, pf.filePath());
 
         // print currently just prints to system.out, so we need to
         // check the contents for the printed string
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
-        interpreter.generateQuestConfig(ast);
+        interpreter.generateQuestConfig(ast, pf);
 
         assertTrue(outputStream.toString().contains("Hello, World!"));
         assertFalse(outputStream.toString().contains("Moin"));
@@ -345,9 +355,9 @@ public class TestDSLInterpreter {
         Helpers.generateQuestConfigWithCustomTypes(
                 program, env, interpreter, TestComponent.class, OtherComponent.class);
 
-        var rtEnv = interpreter.getRuntimeEnvironment();
+        IMemorySpace ms = interpreter.getEntryPointFileMemorySpace();
 
-        var typeWithDefaults = rtEnv.lookupPrototype("c");
+        var typeWithDefaults = (PrototypeValue) ms.resolve("c");
         assertNotEquals(PrototypeValue.NONE, typeWithDefaults);
 
         var firstCompWithDefaults = typeWithDefaults.getDefaultValue("test_component");
@@ -408,7 +418,7 @@ public class TestDSLInterpreter {
 
         var entity = ((CustomQuestConfig) questConfig).entity();
         var rtEnv = interpreter.getRuntimeEnvironment();
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getFileMemorySpace(rtEnv.entryPointFileScope());
 
         // the config should contain the my_obj definition on the entity-value, which should
         // encapsulate the actual
@@ -490,7 +500,7 @@ public class TestDSLInterpreter {
 
         var entity = ((CustomQuestConfig) questConfig).entity();
         var rtEnv = interpreter.getRuntimeEnvironment();
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
 
         // the config should contain the my_obj definition on the entity-value, which should
         // encapsulate the actual
@@ -539,7 +549,7 @@ public class TestDSLInterpreter {
 
         Helpers.generateQuestConfigWithCustomTypes(program, env, interpreter, Entity.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
 
         // check, if the component was instantiated and the
         // Point member is set to null, because the Point type is not supported
@@ -595,7 +605,7 @@ public class TestDSLInterpreter {
         Helpers.generateQuestConfigWithCustomTypes(
                 program, env, interpreter, Entity.class, TestComponent1.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
         AggregateValue config = (AggregateValue) (globalMs.resolve("config"));
         AggregateValue myObj = (AggregateValue) config.getMemorySpace().resolve("entity");
         AggregateValue component =
@@ -644,15 +654,9 @@ public class TestDSLInterpreter {
                         Entity.TestComponentWithExternalTypeProperty.instance);
         DSLInterpreter interpreter = new DSLInterpreter();
         Helpers.generateQuestConfigWithCustomTypes(
-                program,
-                env,
-                interpreter,
-                Entity.class,
-                TestComponent1.class,
-                // TestComponentWithExternalType.class,
-                ExternalType.class);
+                program, env, interpreter, Entity.class, TestComponent1.class, ExternalType.class);
 
-        var globalMs = interpreter.getGlobalMemorySpace();
+        var globalMs = interpreter.getEntryPointFileMemorySpace();
         AggregateValue config = (AggregateValue) (globalMs.resolve("config"));
         AggregateValue myObj = (AggregateValue) config.getMemorySpace().resolve("entity");
         AggregateValue component =
@@ -2563,8 +2567,13 @@ public class TestDSLInterpreter {
                 (NativeInstantiate) runtimeEnvironment.getGlobalScope().resolve("instantiate");
         // create new IdNode for "wizard_type` to pass to native instantiate
         IdNode node = new IdNode("wizard_type", null);
+
+        // push file related memoryspace as context
+        interpreter.setContextFileByPath(null);
+
         // call the function
-        var value = (AggregateValue) instantiateFunc.call(interpreter, List.of(node));
+        var value = (AggregateValue) interpreter.callCallable(instantiateFunc, List.of(node));
+
         // extract the entity from the Value-instance
         core.Entity entity = (core.Entity) value.getInternalValue();
 
@@ -2602,6 +2611,10 @@ public class TestDSLInterpreter {
                 (NativeInstantiate) runtimeEnvironment.getGlobalScope().resolve("instantiate");
         // create new IdNode for "wizard_type` to pass to native instantiate
         IdNode node = new IdNode("wizard_type", null);
+
+        // set file context
+        interpreter.setContextFileByPath(null);
+
         // call the function
         var value = (AggregateValue) instantiateFunc.call(interpreter, List.of(node));
         // extract the entity from the Value-instance
@@ -2612,8 +2625,9 @@ public class TestDSLInterpreter {
         var outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
 
-        FunctionSymbol fnSym =
-                (FunctionSymbol) runtimeEnvironment.getGlobalScope().resolve("test_func");
+        var fileScope = runtimeEnvironment.getFileScope(null);
+
+        FunctionSymbol fnSym = (FunctionSymbol) fileScope.resolve("test_func");
         interpreter.executeUserDefinedFunctionRawParameters(
                 fnSym, Arrays.stream(new Object[] {entity}).toList());
 
@@ -4018,5 +4032,176 @@ public class TestDSLInterpreter {
         core.Entity entity = builtTask.stream().toList().get(0).stream().findFirst().get();
         Assert.assertTrue(entity.toString().contains("HELLO"));
         Assert.assertEquals("CUSTOM TEXT", task.scenarioText());
+    }
+
+    @Test
+    public void testImportFuncCall() {
+        String program =
+                """
+            #import "test.dng":test_fn as print_hello_world
+
+            entity_type my_type {
+                interaction_component {
+                    on_interaction: func
+                }
+            }
+
+            fn func(entity ent, entity other_ent) {
+                print_hello_world();
+            }
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var my_ent : entity;
+                my_ent = instantiate(my_type);
+                room_set.add(my_ent);
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment(testLibPath);
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+
+        var ic = entity.fetch(InteractionComponent.class).get();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        ic.triggerInteraction(entity, entity);
+
+        String output = outputStream.toString();
+        assertEquals("Hello, World!" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testImportEntityType() {
+        String program =
+                """
+            #import "test.dng":my_ent_type as my_type
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var my_ent : entity;
+                my_ent = instantiate(my_type);
+                room_set.add(my_ent);
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment(testLibPath);
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+
+        var ic = entity.fetch(InteractionComponent.class).get();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        ic.triggerInteraction(entity, entity);
+
+        String output = outputStream.toString();
+        assertEquals("my_interaction_handler" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testImportItemType() {
+        String program =
+                """
+            #import "test.dng":my_item_type as my_type
+
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "HELLO", "3"],
+                correct_answer_index: 2,
+                scenario_builder: mock_builder
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn mock_builder(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                var item : entity;
+                var content : task_content;
+                content = t.get_content().get(0);
+                item = build_quest_item(my_type, content);
+                place_quest_item(item, room_set);
+
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+
+        var env = new GameEnvironment(testLibPath);
+        var interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program, env);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        var entitySet = builtTask.iterator().next();
+        var entity = entitySet.iterator().next();
+        var ic = entity.fetch(ItemComponent.class).get();
+        Assert.assertEquals(
+                "1",
+                ((Quiz.Content) ((QuestItem) ic.item()).taskContentComponent().content())
+                        .content());
     }
 }
