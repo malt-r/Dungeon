@@ -167,4 +167,9 @@ public class Value implements IClonable {
             return internalValue.toString();
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
 }

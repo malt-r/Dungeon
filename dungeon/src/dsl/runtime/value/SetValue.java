@@ -3,6 +3,7 @@ package dsl.runtime.value;
 import dsl.interpreter.DSLInterpreter;
 import dsl.parser.ast.Node;
 import dsl.runtime.callable.IInstanceCallable;
+import dsl.semanticanalysis.typesystem.instantiation.TypeInstantiator;
 import dsl.semanticanalysis.typesystem.typebuilding.type.SetType;
 
 import java.util.*;
@@ -30,7 +31,7 @@ public class SetValue extends Value {
     /**
      * @return the internal HashSet of this {@link SetValue}.
      */
-    public HashSet<Value> internalSet() {
+    protected HashSet<Value> internalSet() {
         return ((HashSet<Value>) this.object);
     }
     /**
@@ -46,7 +47,11 @@ public class SetValue extends Value {
             return false;
         }
         internalValueSet.add(internalValue);
-        internalSet().add(value);
+
+        // TODO: this should either be a copy operation!
+        //  or the set should only store the internal values and
+        //  don't even store the Value-instances
+        boolean inserted = internalSet().add((Value)value.clone());
         return true;
     }
 
@@ -97,7 +102,7 @@ public class SetValue extends Value {
         public Object call(DSLInterpreter interpreter, Object instance, List<Node> parameters) {
             SetValue setValue = (SetValue) instance;
 
-            return setValue.internalSet().size();
+            return setValue.internalValueSet.size();
         }
     }
 
@@ -124,4 +129,12 @@ public class SetValue extends Value {
     }
     // endregion
 
+
+    @Override
+    public Object clone() {
+        var cloneValue = new SetValue(this.getDataType());
+        cloneValue.internalValueSet = this.internalValueSet;
+        cloneValue.object = this.object;
+        return cloneValue;
+    }
 }

@@ -351,6 +351,9 @@ public class GameEnvironment implements IEnvironment {
                 new NativePlaceQuestItem(Scope.NULL, questItemType, entitySetType);
         nativeFunctions.add(placeQuestItem);
 
+        NativeFunction buildWorldItem = new NativeBuildQuestItemEntity(Scope.NULL, entityType, questItemType);
+        nativeFunctions.add(buildWorldItem);
+
         NativeFunction addFillerContent = new GenerateRandomFillerContent(Scope.NULL, entityType);
         nativeFunctions.add(addFillerContent);
 
@@ -486,6 +489,41 @@ public class GameEnvironment implements IEnvironment {
             entitySetValue.addValue(worldEntityValue);
 
             return null;
+        }
+
+        @Override
+        public ICallable.Type getCallableType() {
+            return ICallable.Type.Native;
+        }
+    }
+
+    private static class NativeBuildQuestItemEntity extends NativeFunction {
+        /**
+         * Constructor
+         *
+         * @param parentScope parent scope of this function
+         * @param questItemType the {@link IType} representing quest items
+         */
+        public NativeBuildQuestItemEntity(IScope parentScope, IType entityType, IType questItemType) {
+            super(
+                "build_item_entity",
+                parentScope,
+                new FunctionType(entityType, questItemType));
+        }
+
+        @Override
+        public Object call(DSLInterpreter interpreter, List<Node> parameters) {
+            assert parameters != null && parameters.size() > 0;
+
+            // evaluate parameters
+            RuntimeEnvironment rtEnv = interpreter.getRuntimeEnvironment();
+            Value questItemValue = (Value) parameters.get(0).accept(interpreter);
+
+            // build an entity for the quest item with the WorldItemBuilder
+            var questItemObject = questItemValue.getInternalValue();
+            var worldEntity = WorldItemBuilder.buildWorldItem((Item) questItemObject);
+
+            return worldEntity;
         }
 
         @Override

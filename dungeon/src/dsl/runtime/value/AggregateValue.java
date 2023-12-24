@@ -17,6 +17,8 @@ public class AggregateValue extends Value {
         return memorySpace;
     }
 
+    private IMemorySpace parentMemorySpace;
+
     /**
      * Constructor
      *
@@ -43,6 +45,7 @@ public class AggregateValue extends Value {
     private void initializeMemorySpace(IMemorySpace parentSpace) {
         this.memorySpace = new MemorySpace(parentSpace);
         this.memorySpace.bindValue(THIS_NAME, this);
+        this.parentMemorySpace = parentSpace;
     }
 
     /**
@@ -64,7 +67,10 @@ public class AggregateValue extends Value {
 
     @Override
     public Object clone() {
-        return this;
+        var cloneValue = new AggregateValue(this.dataType, this.parentMemorySpace, this.getInternalValue());
+        cloneValue.dirty = this.dirty;
+        cloneValue.setMemorySpace(this.getMemorySpace());
+        return cloneValue;
     }
 
     /**

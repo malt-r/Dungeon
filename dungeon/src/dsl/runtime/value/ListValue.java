@@ -62,6 +62,13 @@ public class ListValue extends Value {
         internalList().clear();
     }
 
+    @Override
+    public Object clone() {
+        var cloneValue = new ListValue(this.getDataType());
+        cloneValue.object = this.object;
+        return cloneValue;
+    }
+
     // region native_methods
 
     /**

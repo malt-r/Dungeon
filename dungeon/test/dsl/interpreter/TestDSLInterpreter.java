@@ -4204,4 +4204,77 @@ public class TestDSLInterpreter {
                 ((Quiz.Content) ((QuestItem) ic.item()).taskContentComponent().content())
                         .content());
     }
+
+    @Test
+    public void testSetInsertion() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: [ "1", "2", "3", "4"],
+                correct_answer_index: 3
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            item_type scroll_type {
+                display_name: "A scroll",
+                description: "Please read me",
+                texture_path: "items/book/wisdom_scroll.png"
+            }
+
+            fn build_task(single_choice_task t) -> entity<><> {
+                var return_set : entity<><>;
+                var room_set : entity<>;
+
+                // instantiate items
+                var item_entity : entity;
+                for task_content answer in t.get_content() {
+                    var item : quest_item;
+                    item = build_quest_item(scroll_type, answer);
+                    item_entity = build_item_entity(item);
+                    room_set.add(item_entity);
+                }
+
+                return_set.add(room_set);
+                return return_set;
+            }
+            """;
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        // find all "scrolls"
+        HashSet<String> elementContents = new HashSet<>();
+        for (var roomSet : builtTask) {
+            for (core.Entity entity : roomSet) {
+                var optionalItemComp = entity.fetch(ItemComponent.class);
+                if (optionalItemComp.isPresent()) {
+                    ItemComponent itemComp = optionalItemComp.get();
+                    QuestItem questItem = (QuestItem) itemComp.item();
+                    var element = (Quiz.Content) questItem.taskContentComponent().content();
+                    elementContents.add(element.content());
+                }
+            }
+        }
+
+        Assert.assertEquals(4, elementContents.size());
+        Assert.assertTrue(elementContents.contains("1"));
+        Assert.assertTrue(elementContents.contains("2"));
+        Assert.assertTrue(elementContents.contains("3"));
+        Assert.assertTrue(elementContents.contains("4"));
+    }
 }

@@ -1514,7 +1514,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             internalIterator = internalList.iterator();
         } else if (iterableType.getTypeKind().equals(IType.Kind.SetType)) {
             var setValue = (SetValue) iterableValue;
-            Set<Value> internalSet = setValue.internalSet();
+            Set<Value> internalSet = setValue.getValues();
             internalIterator = internalSet.iterator();
         } else {
             throw new RuntimeException(
