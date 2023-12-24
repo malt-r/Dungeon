@@ -136,5 +136,19 @@ public class ListValue extends Value {
             }
         }
     }
+
+    public static class ClearMethod implements IInstanceCallable {
+
+        public static ClearMethod instance = new ClearMethod();
+
+        private ClearMethod() {}
+
+        @Override
+        public Object call(DSLInterpreter interpreter, Object instance, List<Node> parameters) {
+            ListValue listValue = (ListValue) instance;
+            listValue.internalList().clear();
+            return null;
+        }
+    }
     // endregion
 }
