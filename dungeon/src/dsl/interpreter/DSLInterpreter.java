@@ -1400,23 +1400,29 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         assignee.clearMap();
 
-        IType keyType = assignee.getDataType().getKeyType();
-        IType entryType = assignee.getDataType().getElementType();
+        IType assigneeKeyType = assignee.getDataType().getKeyType();
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType valueKeyType = mapValueToAssign.getDataType().getKeyType();
+        IType valueEntryType = mapValueToAssign.getDataType().getElementType();
 
-        Map<Value, Value> valuesToAdd = mapValueToAssign.internalMap();
-        for (var entryToAdd : valuesToAdd.entrySet()) {
+        if (assigneeKeyType.equals(valueKeyType) && assigneeEntryType.equals(valueEntryType)) {
+            return assignee.setInternalValue(mapValueToAssign.getInternalValue());
+        } else {
+            Map<Value, Value> valuesToAdd = mapValueToAssign.internalMap();
+            for (var entryToAdd : valuesToAdd.entrySet()) {
 
-            Value entryKeyValue = createDefaultValue(keyType);
-            Value entryElementValue = createDefaultValue(entryType);
+                Value entryKeyValue = createDefaultValue(assigneeKeyType);
+                Value entryElementValue = createDefaultValue(assigneeEntryType);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryKeyValue, entryToAdd.getKey());
-            setValue(entryElementValue, entryToAdd.getValue());
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryKeyValue, entryToAdd.getKey());
+                setValue(entryElementValue, entryToAdd.getValue());
 
-            assignee.addValue(entryKeyValue, entryElementValue);
+                assignee.addValue(entryKeyValue, entryElementValue);
+            }
+            return true;
         }
-        return true;
     }
 
     private boolean setListValue(ListValue assignee, Value valueToAssign) {
