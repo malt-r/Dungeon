@@ -1371,7 +1371,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = setValueToAssign.getDataType().getElementType();
-        if (!assigneeEntryType.equals(newValueEntryType)) {
+        if (assigneeEntryType.equals(newValueEntryType)) {
+            return assignee.setInternalValue(setValueToAssign.getInternalValue());
+        } else {
             // TODO: this should not be done implicitly but done specifically, if the
             //  semantic analysis leads to the conclusion that the types are different
             Set<Value> valuesToAdd = setValueToAssign.getValues();
@@ -1385,8 +1387,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 assignee.addValue(entryAssigneeValue);
             }
             return true;
-        } else {
-            return assignee.setInternalValue(setValueToAssign.getInternalValue());
         }
     }
 
@@ -1436,7 +1436,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
         // TODO: should just implement the cloning-behaviour for this
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = listValueToAssign.getDataType().getElementType();
-        if (!assigneeEntryType.equals(newValueEntryType)) {
+        if (assigneeEntryType.equals(newValueEntryType)) {
+            return assignee.setInternalValue(listValueToAssign.getInternalValue());
+        } else {
             // TODO: this should not be done implicitly but done specifically, if the
             //  semantic analysis leads to the conclusion that the types are different
             assignee.clearList();
@@ -1450,8 +1452,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 assignee.addValue(entryAssigneeValue);
             }
             return true;
-        } else {
-            return assignee.setInternalValue(listValueToAssign.getInternalValue());
         }
     }
 
