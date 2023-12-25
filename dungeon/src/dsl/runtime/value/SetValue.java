@@ -3,7 +3,6 @@ package dsl.runtime.value;
 import dsl.interpreter.DSLInterpreter;
 import dsl.parser.ast.Node;
 import dsl.runtime.callable.IInstanceCallable;
-import dsl.semanticanalysis.typesystem.instantiation.TypeInstantiator;
 import dsl.semanticanalysis.typesystem.typebuilding.type.SetType;
 
 import java.util.*;
@@ -51,7 +50,7 @@ public class SetValue extends Value {
         // TODO: this should either be a copy operation!
         //  or the set should only store the internal values and
         //  don't even store the Value-instances
-        boolean inserted = internalSet().add((Value)value.clone());
+        boolean inserted = internalSet().add((Value) value.clone());
         return true;
     }
 
@@ -128,7 +127,6 @@ public class SetValue extends Value {
         }
     }
     // endregion
-
 
     @Override
     public Object clone() {

@@ -67,7 +67,8 @@ public class AggregateValue extends Value {
 
     @Override
     public Object clone() {
-        var cloneValue = new AggregateValue(this.dataType, this.parentMemorySpace, this.getInternalValue());
+        var cloneValue =
+                new AggregateValue(this.dataType, this.parentMemorySpace, this.getInternalValue());
         cloneValue.dirty = this.dirty;
         cloneValue.setMemorySpace(this.getMemorySpace());
         return cloneValue;

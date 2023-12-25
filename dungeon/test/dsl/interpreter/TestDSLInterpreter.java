@@ -4208,7 +4208,7 @@ public class TestDSLInterpreter {
     @Test
     public void testSetInsertion() {
         String program =
-            """
+                """
             single_choice_task t1 {
                 description: "Task1",
                 answers: [ "1", "2", "3", "4"],
@@ -4281,7 +4281,7 @@ public class TestDSLInterpreter {
     @Test
     public void testListManipulationThroughSet() {
         String program =
-            """
+                """
             single_choice_task t1 {
                 description: "Task1",
                 answers: [ "1", "2", "3", "4"],
@@ -4346,10 +4346,14 @@ public class TestDSLInterpreter {
 
         String output = outputStream.toString();
         Assert.assertEquals(
-            "5" + System.lineSeparator() +
-            "6" + System.lineSeparator() +
-            "7" + System.lineSeparator() +
-            "8" + System.lineSeparator(),
-            output);
+                "5"
+                        + System.lineSeparator()
+                        + "6"
+                        + System.lineSeparator()
+                        + "7"
+                        + System.lineSeparator()
+                        + "8"
+                        + System.lineSeparator(),
+                output);
     }
 }

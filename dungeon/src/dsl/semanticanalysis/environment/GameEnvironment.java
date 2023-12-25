@@ -351,7 +351,8 @@ public class GameEnvironment implements IEnvironment {
                 new NativePlaceQuestItem(Scope.NULL, questItemType, entitySetType);
         nativeFunctions.add(placeQuestItem);
 
-        NativeFunction buildWorldItem = new NativeBuildQuestItemEntity(Scope.NULL, entityType, questItemType);
+        NativeFunction buildWorldItem =
+                new NativeBuildQuestItemEntity(Scope.NULL, entityType, questItemType);
         nativeFunctions.add(buildWorldItem);
 
         NativeFunction addFillerContent = new GenerateRandomFillerContent(Scope.NULL, entityType);
@@ -504,11 +505,9 @@ public class GameEnvironment implements IEnvironment {
          * @param parentScope parent scope of this function
          * @param questItemType the {@link IType} representing quest items
          */
-        public NativeBuildQuestItemEntity(IScope parentScope, IType entityType, IType questItemType) {
-            super(
-                "build_item_entity",
-                parentScope,
-                new FunctionType(entityType, questItemType));
+        public NativeBuildQuestItemEntity(
+                IScope parentScope, IType entityType, IType questItemType) {
+            super("build_item_entity", parentScope, new FunctionType(entityType, questItemType));
         }
 
         @Override
