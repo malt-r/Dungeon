@@ -1367,13 +1367,12 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to SetValue, it is not a SetValue itself!");
         }
 
-        assignee.clearSet();
-
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = setValueToAssign.getDataType().getElementType();
         if (assigneeEntryType.equals(newValueEntryType)) {
             return assignee.setInternalValue(setValueToAssign.getInternalValue());
         } else {
+            assignee.clearSet();
             // TODO: this should not be done implicitly but done specifically, if the
             //  semantic analysis leads to the conclusion that the types are different
             Set<Value> valuesToAdd = setValueToAssign.getValues();
@@ -1398,8 +1397,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to MapValue, it is not a MapValue itself!");
         }
 
-        assignee.clearMap();
-
         IType assigneeKeyType = assignee.getDataType().getKeyType();
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType valueKeyType = mapValueToAssign.getDataType().getKeyType();
@@ -1408,6 +1405,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
         if (assigneeKeyType.equals(valueKeyType) && assigneeEntryType.equals(valueEntryType)) {
             return assignee.setInternalValue(mapValueToAssign.getInternalValue());
         } else {
+            assignee.clearMap();
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
+
             Map<Value, Value> valuesToAdd = mapValueToAssign.internalMap();
             for (var entryToAdd : valuesToAdd.entrySet()) {
 
