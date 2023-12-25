@@ -1369,18 +1369,25 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
         assignee.clearSet();
 
-        IType entryType = assignee.getDataType().getElementType();
-        Set<Value> valuesToAdd = setValueToAssign.getValues();
-        for (Value valueToAdd : valuesToAdd) {
-            Value entryAssigneeValue = createDefaultValue(entryType);
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType newValueEntryType = setValueToAssign.getDataType().getElementType();
+        if (!assigneeEntryType.equals(newValueEntryType)) {
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
+            Set<Value> valuesToAdd = setValueToAssign.getValues();
+            for (Value valueToAdd : valuesToAdd) {
+                Value entryAssigneeValue = createDefaultValue(assigneeEntryType);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryAssigneeValue, valueToAdd);
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryAssigneeValue, valueToAdd);
 
-            assignee.addValue(entryAssigneeValue);
+                assignee.addValue(entryAssigneeValue);
+            }
+            return true;
+        } else {
+            return assignee.setInternalValue(setValueToAssign.getInternalValue());
         }
-        return true;
     }
 
     private boolean setMapValue(MapValue assignee, Value valueToAssign) {
@@ -1420,19 +1427,26 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to ListValue, it is not a ListValue itself!");
         }
 
-        assignee.clearList();
+        // TODO: should just implement the cloning-behaviour for this
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType newValueEntryType = listValueToAssign.getDataType().getElementType();
+        if (!assigneeEntryType.equals(newValueEntryType)) {
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
+            assignee.clearList();
+            for (var valueToAdd : listValueToAssign.getValues()) {
+                Value entryAssigneeValue = createDefaultValue(assigneeEntryType);
 
-        IType entryType = assignee.getDataType().getElementType();
-        for (var valueToAdd : listValueToAssign.getValues()) {
-            Value entryAssigneeValue = createDefaultValue(entryType);
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryAssigneeValue, valueToAdd);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryAssigneeValue, valueToAdd);
-
-            assignee.addValue(entryAssigneeValue);
+                assignee.addValue(entryAssigneeValue);
+            }
+            return true;
+        } else {
+            return assignee.setInternalValue(listValueToAssign.getInternalValue());
         }
-        return true;
     }
 
     private boolean setFunctionValue(FunctionValue assignee, Value valueToAssign) {
