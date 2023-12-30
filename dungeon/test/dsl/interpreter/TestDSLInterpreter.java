@@ -4375,12 +4375,6 @@ public class TestDSLInterpreter {
             dependency_graph: g
         }
 
-        item_type scroll_type {
-            display_name: "A scroll",
-            description: "Please read me",
-            texture_path: "items/book/wisdom_scroll.png"
-        }
-
         fn build_task(single_choice_task t) -> entity<><> {
             var return_set : entity<><>;
             var room_set : entity<>;
@@ -4425,6 +4419,72 @@ public class TestDSLInterpreter {
                 + "2"
                 + System.lineSeparator()
                 + "3"
+                + System.lineSeparator(),
+            output);
+    }
+
+    @Test
+    public void testSetAssignment() {
+        String program =
+            """
+        single_choice_task t1 {
+            description: "Task1",
+            answers: [ "1", "2", "3", "4"],
+            correct_answer_index: 3
+        }
+
+        graph g {
+            t1
+        }
+
+        dungeon_config c {
+            dependency_graph: g
+        }
+
+        fn build_task(single_choice_task t) -> entity<><> {
+            var return_set : entity<><>;
+            var room_set : entity<>;
+
+            var my_int_set : int<>;
+            var my_other_int_set : int<>;
+
+            // initialize int set
+            my_int_set.add(1);
+            my_int_set.add(2);
+
+            // assign int set to other int set
+            my_other_int_set = my_int_set;
+
+            // modify int set through other int set
+            my_other_int_set.add(3);
+
+            for int val in my_int_set {
+                print(val);
+            }
+
+            if my_int_set.contains(3) {
+                print("true");
+            }
+
+            return_set.add(room_set);
+            return return_set;
+        }
+        """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "true"
                 + System.lineSeparator(),
             output);
     }
