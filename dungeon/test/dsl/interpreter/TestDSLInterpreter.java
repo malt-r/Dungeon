@@ -4356,4 +4356,76 @@ public class TestDSLInterpreter {
                         + System.lineSeparator(),
                 output);
     }
+
+    @Test
+    public void testListAssignment() {
+        String program =
+            """
+        single_choice_task t1 {
+            description: "Task1",
+            answers: [ "1", "2", "3", "4"],
+            correct_answer_index: 3
+        }
+
+        graph g {
+            t1
+        }
+
+        dungeon_config c {
+            dependency_graph: g
+        }
+
+        item_type scroll_type {
+            display_name: "A scroll",
+            description: "Please read me",
+            texture_path: "items/book/wisdom_scroll.png"
+        }
+
+        fn build_task(single_choice_task t) -> entity<><> {
+            var return_set : entity<><>;
+            var room_set : entity<>;
+
+            var my_int_list : int[];
+            var my_other_int_list : int[];
+
+            // initialize int list
+            my_int_list.add(1);
+            my_int_list.add(2);
+
+            // assign int list to other int list
+            my_other_int_list = my_int_list;
+
+            // modify int list through other int list
+            my_other_int_list.add(3);
+
+            for int val in my_int_list {
+                print(val);
+            }
+
+            return_set.add(room_set);
+            return return_set;
+        }
+        """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "1"
+                + System.lineSeparator()
+                + "2"
+                + System.lineSeparator()
+                + "3"
+                + System.lineSeparator(),
+            output);
+    }
 }
