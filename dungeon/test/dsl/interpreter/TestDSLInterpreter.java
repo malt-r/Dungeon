@@ -4460,10 +4460,6 @@ public class TestDSLInterpreter {
             // modify int set through other int set
             my_other_int_set.add(3);
 
-            for int val in my_int_set {
-                print(val);
-            }
-
             if my_int_set.contains(3) {
                 print("true");
             }
@@ -4541,7 +4537,7 @@ public class TestDSLInterpreter {
 
         // setup interpreter -> let interpreter analyze
         DSLInterpreter interpreter = new DSLInterpreter();
-        
+
         interpreter.initializeRuntime(new GameEnvironment(), null);
 
         interpreter.setValue(val1, val2);
