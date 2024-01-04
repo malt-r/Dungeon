@@ -135,4 +135,17 @@ public class SetValue extends Value {
         cloneValue.object = this.object;
         return cloneValue;
     }
+
+    public boolean assignFromOther(SetValue other) {
+        // TODO: this should be an overridden method of `Value` -> add it to implementation of `Value`
+        if (!this.getDataType().equals(other.getDataType())) {
+            throw new RuntimeException("Incompatible data types");
+        }
+
+        boolean didSetValue = this.setInternalValue(other.getInternalValue());
+        if (didSetValue) {
+            this.internalValueSet = other.internalValueSet;
+        }
+        return didSetValue;
+    }
 }

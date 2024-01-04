@@ -1370,7 +1370,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = setValueToAssign.getDataType().getElementType();
         if (assigneeEntryType.equals(newValueEntryType)) {
-            return assignee.setInternalValue(setValueToAssign.getInternalValue());
+            return assignee.assignFromOther(setValueToAssign);
         } else {
             assignee.clearSet();
             // TODO: this should not be done implicitly but done specifically, if the
