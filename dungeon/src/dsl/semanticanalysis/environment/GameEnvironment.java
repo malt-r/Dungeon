@@ -225,10 +225,10 @@ public class GameEnvironment implements IEnvironment {
     }
 
     @Override
-    public IScope getFileScope(Path file) {
-        IScope scope = this.fileScopes.get(file);
+    public FileScope getFileScope(Path file) {
+        FileScope scope = this.fileScopes.get(file);
         if (scope == null) {
-            scope = Scope.NULL;
+            scope = FileScope.NULL;
         }
         return scope;
     }

@@ -509,7 +509,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
-        FileScope fs = (FileScope) environment.getFileScope(entryPointFilePath);
+        FileScope fs = environment.getFileScope(entryPointFilePath);
         this.environment = new RuntimeEnvironment(environment, this, fs);
 
         initializeScenarioBuilderStorage();

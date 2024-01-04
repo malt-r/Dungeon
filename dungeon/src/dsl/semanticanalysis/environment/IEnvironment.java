@@ -39,7 +39,7 @@ public interface IEnvironment {
 
     void addFileScope(FileScope fileScope);
 
-    IScope getFileScope(Path file);
+    FileScope getFileScope(Path file);
 
     HashMap<Path, FileScope> getFileScopes();
 
