@@ -170,6 +170,19 @@ public class Value implements IClonable {
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        if (!(obj instanceof Value value)) {
+            return false;
+        }
+        // compare based on addresses -> are we comparing to the same object?
+        if (this == value) {
+            return true;
+        }
+        if (!this.dataType.equals(value.dataType)) {
+            return false;
+        }
+        if (this.getInternalValue() == null || value.getInternalValue() == null) {
+            return false;
+        }
+        return this.getInternalValue().equals(value.getInternalValue());
     }
 }
