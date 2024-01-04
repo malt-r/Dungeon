@@ -18,10 +18,12 @@ import dsl.parser.ast.Node;
 import dsl.runtime.memoryspace.EncapsulatedObject;
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
+import dsl.runtime.value.ListValue;
 import dsl.runtime.value.PrototypeValue;
 import dsl.runtime.value.Value;
 import dsl.semanticanalysis.analyzer.SemanticAnalyzer;
 import dsl.semanticanalysis.environment.GameEnvironment;
+import dsl.semanticanalysis.scope.Scope;
 import dsl.semanticanalysis.symbol.FunctionSymbol;
 import dsl.semanticanalysis.typesystem.*;
 import dsl.semanticanalysis.typesystem.typebuilding.annotation.DSLType;
@@ -4487,5 +4489,63 @@ public class TestDSLInterpreter {
             "true"
                 + System.lineSeparator(),
             output);
+    }
+
+    @Test
+    public void testValueEqualityNONE() {
+        Value val = Value.NONE;
+        // because of the custom `equals`-implementation of Value,
+        // it is in fact NOT trivially always true, that `val` is `equal`
+        // to `Value.NONE` and needs to be tested
+        @SuppressWarnings("all")
+        boolean equal = val.equals(Value.NONE);
+        // see above
+        Assert.assertTrue(equal);
+    }
+
+    @Test
+    public void testValueEqualityPOD() {
+        Value val = new Value(BuiltInType.intType, 42);
+        Value otherVal = new Value(BuiltInType.intType, 42);
+        boolean equal = val.equals(otherVal);
+        Assert.assertTrue(equal);
+    }
+
+    @Test
+    public void testValueEqualityListInternalValues() {
+        ListType type = new ListType(BuiltInType.intType, Scope.NULL);
+        ListValue val1 = new ListValue(type);
+        ListValue val2 = new ListValue(type);
+
+        val1.addValue(new Value(BuiltInType.intType, 1));
+        val1.addValue(new Value(BuiltInType.intType, 2));
+
+        val2.addValue(new Value(BuiltInType.intType, 1));
+        val2.addValue(new Value(BuiltInType.intType, 2));
+
+        boolean equals = val1.equals(val2);
+        Assert.assertTrue(equals);
+    }
+
+    @Test
+    public void testValueEqualityListReference() {
+        ListType type = new ListType(BuiltInType.intType, Scope.NULL);
+        ListValue val1 = new ListValue(type);
+        ListValue val2 = new ListValue(type);
+
+        val1.addValue(new Value(BuiltInType.intType, 1));
+        val1.addValue(new Value(BuiltInType.intType, 2));
+
+        val2.addValue(new Value(BuiltInType.intType, 3));
+        val2.addValue(new Value(BuiltInType.intType, 4));
+
+        // setup interpreter -> let interpreter analyze
+        DSLInterpreter interpreter = new DSLInterpreter();
+        
+        interpreter.initializeRuntime(new GameEnvironment(), null);
+
+        interpreter.setValue(val1, val2);
+        boolean equals = val1.equals(val2);
+        Assert.assertTrue(equals);
     }
 }
