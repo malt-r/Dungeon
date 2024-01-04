@@ -86,4 +86,18 @@ public class PrototypeValue extends Value implements IType {
     public Set<Map.Entry<String, Value>> getDefaultValues() {
         return this.defaultValues.entrySet();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PrototypeValue value)) {
+            return false;
+        }
+        if (this.internalType != value.internalType) {
+            return false;
+        }
+        // TODO: value equality
+
+        // address-equality
+        return this == obj;
+    }
 }
