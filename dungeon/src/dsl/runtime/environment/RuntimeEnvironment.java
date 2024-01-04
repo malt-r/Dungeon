@@ -26,6 +26,7 @@ public class RuntimeEnvironment implements IEnvironment {
     private final HashMap<String, PrototypeValue> prototypes;
     protected HashMap<Path, FileScope> fileScopes = new HashMap<>();
     private final FileScope entryPointFileScope;
+    private final FileScope nullFileScope;
     private final HashMap<Type, IType> javaTypeToDSLType;
     private final RuntimeObjectTranslator runtimeObjectTranslator;
     private final TypeBuilder typeBuilder;
@@ -60,6 +61,7 @@ public class RuntimeEnvironment implements IEnvironment {
         this.typeInstantiator = new TypeInstantiator(interpreter);
         this.fileScopes = other.getFileScopes();
         this.entryPointFileScope = entryPointFileScope;
+        this.nullFileScope = other.getNullFileScope();
     }
 
     public FileScope entryPointFileScope() {
@@ -103,9 +105,14 @@ public class RuntimeEnvironment implements IEnvironment {
     public FileScope getFileScope(Path file) {
         FileScope scope = this.fileScopes.get(file);
         if (scope == null) {
-            scope = FileScope.NULL;
+            scope = this.nullFileScope;
         }
         return scope;
+    }
+
+    @Override
+    public FileScope getNullFileScope() {
+        return this.nullFileScope;
     }
 
     @Override

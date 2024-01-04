@@ -44,6 +44,7 @@ import dslinterop.nativescenariobuilder.NativeScenarioBuilder;
 
 import entrypoint.DungeonConfig;
 
+import entrypoint.ParsedFile;
 import task.*;
 import task.dslinterop.*;
 import task.game.components.TaskComponent;
@@ -79,6 +80,7 @@ public class GameEnvironment implements IEnvironment {
     protected final SymbolTable symbolTable;
     protected final Scope globalScope;
     protected final HashMap<Path, FileScope> fileScopes = new HashMap<>();
+    protected final FileScope nullFileScope;
     protected final RuntimeObjectTranslator runtimeObjectTranslator = new RuntimeObjectTranslator();
     protected final Path relLibPath;
 
@@ -93,6 +95,7 @@ public class GameEnvironment implements IEnvironment {
 
         this.typeBuilder = new TypeBuilder();
         this.globalScope = new Scope();
+        this.nullFileScope = new FileScope(new ParsedFile(null, Node.NONE), this.globalScope);
         this.symbolTable = new SymbolTable(this.globalScope);
 
         bindBuiltInTypes();
@@ -228,9 +231,14 @@ public class GameEnvironment implements IEnvironment {
     public FileScope getFileScope(Path file) {
         FileScope scope = this.fileScopes.get(file);
         if (scope == null) {
-            scope = FileScope.NULL;
+            scope = this.nullFileScope;
         }
         return scope;
+    }
+
+    @Override
+    public FileScope getNullFileScope() {
+        return this.nullFileScope;
     }
 
     @Override
