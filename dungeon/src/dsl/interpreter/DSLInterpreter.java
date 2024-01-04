@@ -1470,7 +1470,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return true;
     }
 
-    private boolean setValue(Value assignee, Value valueToAssign) {
+    public boolean setValue(Value assignee, Value valueToAssign) {
         if (assignee == Value.NONE) {
             return false;
         }
