@@ -3375,7 +3375,7 @@ public class TestDSLInterpreter {
                 my_list.add("Hello");
                 my_list.add("World");
                 my_list.add("!");
-                for int entry in my_list count i {
+                for string entry in my_list count i {
                     print(i);
                     print(entry);
                 }
