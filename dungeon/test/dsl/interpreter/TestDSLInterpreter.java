@@ -4544,4 +4544,66 @@ public class TestDSLInterpreter {
         boolean equals = val1.equals(val2);
         Assert.assertTrue(equals);
     }
+
+    @Test
+    public void testPrototypeAssignment() {
+            String program =
+                """
+        single_choice_task t1 {
+            description: "Task1",
+            answers: ["1", "2", "3"],
+            correct_answer_index: 2,
+            scenario_builder: build_scenario1
+        }
+
+        graph g {
+            t1
+        }
+
+        dungeon_config c {
+            dependency_graph: g
+        }
+
+        entity_type wizard_type {
+            draw_component {
+                path: "character/wizard"
+            },
+            hitbox_component {},
+            position_component{},
+            task_component{}
+        }
+
+        fn build_scenario1(single_choice_task t) -> entity<><> {
+            var ret_set : entity<><>;
+
+            var room_set : entity<>;
+
+            var wizard : entity;
+            var my_type : prototype;
+            my_type = wizard_type;
+
+            wizard = instantiate(my_type);
+            wizard.task_component.task = t;
+
+            room_set.add(wizard);
+
+            ret_set.add(room_set);
+
+            return ret_set;
+        }
+        """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+        var roomIter = builtTask.iterator();
+
+        var firstRoomSet = roomIter.next();
+        var entityInFirstRoom = firstRoomSet.iterator().next();
+        DrawComponent drawComp1 = entityInFirstRoom.fetch(DrawComponent.class).get();
+        var frameDrawComp1 = drawComp1.currentAnimation().animationFrames().get(0).pathString();
+        Assert.assertTrue(frameDrawComp1.contains("wizard"));
+    }
 }
