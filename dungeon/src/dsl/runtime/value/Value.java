@@ -185,4 +185,18 @@ public class Value implements IClonable {
         }
         return this.getInternalValue().equals(value.getInternalValue());
     }
+
+    /**
+     * Perform an assignment of this {@link Value} from another {@link Value}. This
+     * requires, that the {@link IType}s of both {@link Value}s are assignable to
+     * each other.
+     * @param other The {@link Value} to assign from.
+     * @return true, if assigning succeeded, false otherwise
+     */
+    public boolean setFrom(Value other) {
+        if (!this.getDataType().equals(other.getDataType())) {
+            throw new RuntimeException("Incompatible data types, can't assign value!");
+        }
+        return this.setInternalValue(other.getInternalValue());
+    }
 }

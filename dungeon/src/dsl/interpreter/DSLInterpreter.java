@@ -1370,7 +1370,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = setValueToAssign.getDataType().getElementType();
         if (assigneeEntryType.equals(newValueEntryType)) {
-            return assignee.assignFromOther(setValueToAssign);
+            return assignee.setFrom(setValueToAssign);
         } else {
             assignee.clearSet();
             // TODO: this should not be done implicitly but done specifically, if the
@@ -1499,7 +1499,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 assignee.setInternalValue(valueToAssign.getInternalValue());
             }
         } else {
-            assignee.setInternalValue(valueToAssign.getInternalValue());
+            return assignee.setFrom(valueToAssign);
         }
         return true;
     }

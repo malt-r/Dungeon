@@ -17,9 +17,9 @@ public class PrototypeValue extends Value implements IType {
             new BuiltInType("item_prototype", Scope.NULL, (v) -> false);
     public static PrototypeValue NONE =
             new PrototypeValue(PROTOTYPE, new AggregateType("NO_TYPE_NAME", Scope.NULL));
-    private final AggregateType internalType;
+    private AggregateType internalType;
 
-    private final HashMap<String, Value> defaultValues;
+    private HashMap<String, Value> defaultValues;
 
     /**
      * Constructor
@@ -99,5 +99,16 @@ public class PrototypeValue extends Value implements IType {
 
         // address-equality
         return this == obj;
+    }
+
+    @Override
+    public boolean setFrom(Value other) {
+        if (!(other instanceof PrototypeValue otherPrototypeValue)) {
+            throw new RuntimeException("Other value is not a prototype value!");
+        }
+
+        this.internalType = otherPrototypeValue.internalType;
+        this.defaultValues = otherPrototypeValue.defaultValues;
+        return true;
     }
 }

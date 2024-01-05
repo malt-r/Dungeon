@@ -66,6 +66,27 @@ public class SetValue extends Value {
         internalSet().clear();
     }
 
+    @Override
+    public Object clone() {
+        var cloneValue = new SetValue(this.getDataType());
+        cloneValue.internalValueSet = this.internalValueSet;
+        cloneValue.object = this.object;
+        return cloneValue;
+    }
+
+    @Override
+    public boolean setFrom(Value other) {
+        if (!(other instanceof SetValue otherSetValue)) {
+            throw new RuntimeException("Other value is not a set value!");
+        }
+
+        boolean didSetValue = super.setFrom(other);
+        if (didSetValue) {
+            this.internalValueSet = otherSetValue.internalValueSet;
+        }
+        return didSetValue;
+    }
+
     // region native_methods
     /**
      * Native method, which implements adding a Value to the internal {@link Set} of a {@link
@@ -127,25 +148,4 @@ public class SetValue extends Value {
         }
     }
     // endregion
-
-    @Override
-    public Object clone() {
-        var cloneValue = new SetValue(this.getDataType());
-        cloneValue.internalValueSet = this.internalValueSet;
-        cloneValue.object = this.object;
-        return cloneValue;
-    }
-
-    public boolean assignFromOther(SetValue other) {
-        // TODO: this should be an overridden method of `Value` -> add it to implementation of `Value`
-        if (!this.getDataType().equals(other.getDataType())) {
-            throw new RuntimeException("Incompatible data types");
-        }
-
-        boolean didSetValue = this.setInternalValue(other.getInternalValue());
-        if (didSetValue) {
-            this.internalValueSet = other.internalValueSet;
-        }
-        return didSetValue;
-    }
 }

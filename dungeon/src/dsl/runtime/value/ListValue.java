@@ -69,6 +69,15 @@ public class ListValue extends Value {
         return cloneValue;
     }
 
+    @Override
+    public boolean setFrom(Value other) {
+        if (!(other instanceof ListValue otherListValue)) {
+            throw new RuntimeException("Other value is not a list value!");
+        }
+
+        return super.setFrom(otherListValue);
+    }
+
     // region native_methods
 
     /**
