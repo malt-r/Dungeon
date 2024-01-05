@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 /** A Prototype stores default values for some AggregateValue. */
+// TODO: remove the implementation for IType! This complicates the whole instantiation heavily
+//  and the original idea, that the instantiation happens implicitly, as the prototype is used as
+//  a normal type is no longer relevant!
 public class PrototypeValue extends Value implements IType {
     public static BuiltInType PROTOTYPE = new BuiltInType("prototype", Scope.NULL, (v) -> false);
     public static BuiltInType ITEM_PROTOTYPE =

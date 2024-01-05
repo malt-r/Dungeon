@@ -615,8 +615,14 @@ public class DSLInterpreter implements AstVisitor<Object> {
             return Value.NONE;
         }
         if (type.getTypeKind().equals(IType.Kind.Basic)) {
-            Object internalValue = Value.getDefaultValue(type);
-            return new Value(type, internalValue);
+            if (type.equals(PrototypeValue.PROTOTYPE)) {
+                return new PrototypeValue(PrototypeValue.PROTOTYPE, null);
+            } else if (type.equals(PrototypeValue.ITEM_PROTOTYPE)) {
+                return new PrototypeValue(PrototypeValue.ITEM_PROTOTYPE, null);
+            } else {
+                Object internalValue = Value.getDefaultValue(type);
+                return new Value(type, internalValue);
+            }
         } else if (type.getTypeKind().equals(IType.Kind.Aggregate)
                 || type.getTypeKind().equals(IType.Kind.AggregateAdapted)) {
             AggregateValue value = new AggregateValue(type, getCurrentMemorySpace());
