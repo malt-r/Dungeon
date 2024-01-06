@@ -1,5 +1,6 @@
 package dsl.runtime.value;
 
+import dsl.runtime.memoryspace.EncapsulatedObject;
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.memoryspace.MemorySpace;
 import dsl.semanticanalysis.typesystem.typebuilding.type.AggregateType;
@@ -41,6 +42,12 @@ public class AggregateValue extends Value {
     public AggregateValue(IType datatype, IMemorySpace parentSpace, Object internalValue) {
         super(datatype, internalValue);
         initializeMemorySpace(parentSpace);
+    }
+
+    public static AggregateValue fromEncapsulatedObject(IMemorySpace parentMemorySpace, EncapsulatedObject encapsulatedObject) {
+        var val = new AggregateValue(encapsulatedObject.dataType, parentMemorySpace, encapsulatedObject.object);
+        val.setMemorySpace(encapsulatedObject);
+        return val;
     }
 
     private void initializeMemorySpace(IMemorySpace parentSpace) {

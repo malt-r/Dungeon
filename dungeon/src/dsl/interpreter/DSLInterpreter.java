@@ -1341,23 +1341,16 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 EncapsulatedObject encapsulatedObject =
                         new EncapsulatedObject(
                                 content, (AggregateType) assigneesType, this.environment);
-                aggregateValueToAssign = new AggregateValue(assigneesType, this.getCurrentMemorySpace(), content);
-                aggregateValueToAssign.setMemorySpace(encapsulatedObject);
 
-                // TODO: test
+                aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
                 aggregateAssignee.setFrom(aggregateValueToAssign);
-                //aggregateAssignee.setMemorySpace(encapsulatedObject);
             } else if (assigneesType.getName().equals("element")) {
                 String stringValue = valueToAssign.getInternalValue().toString();
                 Element<String> content = new Element<>(stringValue);
                 EncapsulatedObject encapsulatedObject =
                         new EncapsulatedObject(
                                 content, (AggregateType) assigneesType, this.environment);
-
-                aggregateValueToAssign = new AggregateValue(assigneesType, this.getCurrentMemorySpace(), content);
-                aggregateValueToAssign.setMemorySpace(encapsulatedObject);
-
-                // TODO: test
+                aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
                 aggregateAssignee.setFrom(aggregateValueToAssign);
             } else {
                 throw new RuntimeException(
