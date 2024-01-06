@@ -1326,32 +1326,22 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     // region value-setting
     private void setAggregateValue(AggregateValue aggregateAssignee, Value valueToAssign) {
-        if (!(valueToAssign instanceof AggregateValue aggregateValueToAssign)) {
+        AggregateValue aggregateValueToAssign;
+        if (!(valueToAssign instanceof AggregateValue)) {
             // if the value to assign is not an aggregate value, we might have
             // the case, where we want to assign a basic Value to a Content object
 
             IType assigneesType = aggregateAssignee.getDataType();
-            AggregateValue aggregateValueToAssign;
+            Object objectToEncapsulate;
             if (assigneesType.getName().equals("content")) {
                 // TODO: this is a temporary solution for "casting" the value to a content
                 //  once typechecking is implemented, this will be refactored
 
                 String stringValue = valueToAssign.getInternalValue().toString();
-                Quiz.Content content = new Quiz.Content(stringValue);
-                EncapsulatedObject encapsulatedObject =
-                        new EncapsulatedObject(
-                                content, (AggregateType) assigneesType, this.environment);
-
-                aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
-                aggregateAssignee.setFrom(aggregateValueToAssign);
+                objectToEncapsulate = new Quiz.Content(stringValue);
             } else if (assigneesType.getName().equals("element")) {
                 String stringValue = valueToAssign.getInternalValue().toString();
-                Element<String> content = new Element<>(stringValue);
-                EncapsulatedObject encapsulatedObject =
-                        new EncapsulatedObject(
-                                content, (AggregateType) assigneesType, this.environment);
-                aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
-                aggregateAssignee.setFrom(aggregateValueToAssign);
+                objectToEncapsulate = new Element<>(stringValue);
             } else {
                 throw new RuntimeException(
                         "Can't assign Value of type "
@@ -1359,9 +1349,17 @@ public class DSLInterpreter implements AstVisitor<Object> {
                                 + " to Value of "
                                 + assigneesType);
             }
-        } else {
+
+            // do the encapsulation
+            EncapsulatedObject encapsulatedObject =
+                new EncapsulatedObject(
+                    objectToEncapsulate, (AggregateType) assigneesType, this.environment);
+            aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
             aggregateAssignee.setFrom(aggregateValueToAssign);
+        } else {
+            aggregateValueToAssign = (AggregateValue) valueToAssign;
         }
+        aggregateAssignee.setFrom(aggregateValueToAssign);
     }
 
     private boolean setSetValue(SetValue assignee, Value valueToAssign) {
