@@ -1343,7 +1343,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
                                 content, (AggregateType) assigneesType, this.environment);
 
                 aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
-                aggregateAssignee.setFrom(aggregateValueToAssign);
+                //aggregateAssignee.setFrom(aggregateValueToAssign);
+                aggregateValueToAssign.setFrom(aggregateValueToAssign);
             } else if (assigneesType.getName().equals("element")) {
                 String stringValue = valueToAssign.getInternalValue().toString();
                 Element<String> content = new Element<>(stringValue);
@@ -1351,7 +1352,8 @@ public class DSLInterpreter implements AstVisitor<Object> {
                         new EncapsulatedObject(
                                 content, (AggregateType) assigneesType, this.environment);
                 aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
-                aggregateAssignee.setFrom(aggregateValueToAssign);
+                //aggregateAssignee.setFrom(aggregateValueToAssign);
+                aggregateValueToAssign.setFrom(aggregateValueToAssign);
             } else {
                 throw new RuntimeException(
                         "Can't assign Value of type "
