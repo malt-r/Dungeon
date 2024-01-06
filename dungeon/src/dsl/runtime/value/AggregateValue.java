@@ -96,4 +96,18 @@ public class AggregateValue extends Value {
 
         return internalValueNull && dataMemberCount == 0;
     }
+
+    @Override
+    public boolean setFrom(Value other) {
+        if (!(other instanceof AggregateValue otherAggregateValue)) {
+            throw new RuntimeException("Othe value is not an aggregate Value!");
+        }
+
+        boolean didSetValue = super.setFrom(other);
+        if (didSetValue) {
+            this.parentMemorySpace = otherAggregateValue.parentMemorySpace;
+            this.memorySpace = otherAggregateValue.memorySpace;
+        }
+        return didSetValue;
+    }
 }
