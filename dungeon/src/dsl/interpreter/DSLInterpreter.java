@@ -1331,6 +1331,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             // the case, where we want to assign a basic Value to a Content object
 
             IType assigneesType = aggregateAssignee.getDataType();
+            AggregateValue aggregateValueToAssign;
             if (assigneesType.getName().equals("content")) {
                 // TODO: this is a temporary solution for "casting" the value to a content
                 //  once typechecking is implemented, this will be refactored
@@ -1340,9 +1341,12 @@ public class DSLInterpreter implements AstVisitor<Object> {
                 EncapsulatedObject encapsulatedObject =
                         new EncapsulatedObject(
                                 content, (AggregateType) assigneesType, this.environment);
+                aggregateValueToAssign = new AggregateValue(assigneesType, this.getCurrentMemorySpace(), content);
+                aggregateValueToAssign.setMemorySpace(encapsulatedObject);
 
-                aggregateAssignee.setMemorySpace(encapsulatedObject);
-                aggregateAssignee.setInternalValue(content);
+                // TODO: test
+                aggregateAssignee.setFrom(aggregateValueToAssign);
+                //aggregateAssignee.setMemorySpace(encapsulatedObject);
             } else if (assigneesType.getName().equals("element")) {
                 String stringValue = valueToAssign.getInternalValue().toString();
                 Element<String> content = new Element<>(stringValue);
@@ -1350,8 +1354,11 @@ public class DSLInterpreter implements AstVisitor<Object> {
                         new EncapsulatedObject(
                                 content, (AggregateType) assigneesType, this.environment);
 
-                aggregateAssignee.setMemorySpace(encapsulatedObject);
-                aggregateAssignee.setInternalValue(content);
+                aggregateValueToAssign = new AggregateValue(assigneesType, this.getCurrentMemorySpace(), content);
+                aggregateValueToAssign.setMemorySpace(encapsulatedObject);
+
+                // TODO: test
+                aggregateAssignee.setFrom(aggregateValueToAssign);
             } else {
                 throw new RuntimeException(
                         "Can't assign Value of type "
@@ -1361,8 +1368,6 @@ public class DSLInterpreter implements AstVisitor<Object> {
             }
         } else {
             aggregateAssignee.setFrom(aggregateValueToAssign);
-            //aggregateAssignee.setMemorySpace(aggregateValueToAssign.getMemorySpace());
-            //aggregateAssignee.setInternalValue(aggregateValueToAssign.getInternalValue());
         }
     }
 
