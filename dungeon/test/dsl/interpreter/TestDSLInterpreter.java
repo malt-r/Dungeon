@@ -4608,6 +4608,72 @@ public class TestDSLInterpreter {
     }
 
     @Test
+    public void testAggregateValueAssignment() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            entity_type wizard_type {
+                draw_component {
+                    path: "character/wizard"
+                },
+                hitbox_component {},
+                interaction_component{},
+                position_component{},
+                task_component{}
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+
+                var room_set : entity<>;
+
+                var wizard1 : entity;
+                var wizard2 : entity;
+                var my_type : prototype;
+                my_type = wizard_type;
+
+                wizard1 = instantiate(my_type);
+                wizard1.task_component.task = t;
+
+                wizard2 = wizard1;
+                room_set.add(wizard2);
+
+                wizard1.interaction_component.radius = 42.0;
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+        var roomIter = builtTask.iterator();
+
+        var firstRoomSet = roomIter.next();
+        var entityInFirstRoom = firstRoomSet.iterator().next();
+        InteractionComponent interactionComponent = entityInFirstRoom.fetch(InteractionComponent.class).get();
+        float radius = interactionComponent.radius();
+        Assert.assertEquals(42.f, radius, 0.f);
+    }
+
+    @Test
     public void testEnumAssignment() {
         String program =
             """
