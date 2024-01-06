@@ -118,7 +118,7 @@ public class AggregateValue extends Value {
             throw new RuntimeException("Incompatible data types, can't assign value!");
         }
 
-        boolean didSetValue = this.setInternalValue(other);
+        boolean didSetValue = this.setInternalValue(other.getInternalValue());
         if (didSetValue) {
             this.parentMemorySpace = otherAggregateValue.parentMemorySpace;
             this.memorySpace = otherAggregateValue.memorySpace;
