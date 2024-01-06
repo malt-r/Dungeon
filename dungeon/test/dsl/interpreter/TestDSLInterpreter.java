@@ -4181,7 +4181,7 @@ public class TestDSLInterpreter {
                 var return_set : entity<><>;
                 var room_set : entity<>;
 
-                var item : entity;
+                var item : quest_item;
                 var content : task_content;
                 content = t.get_content().get(0);
                 item = build_quest_item(my_type, content);
