@@ -1499,11 +1499,12 @@ public class DSLInterpreter implements AstVisitor<Object> {
             assignee.setInternalValue(instantiatedValue);
         } else if (assignee instanceof EncapsulatedField encapsulatedField) {
             if (assignee.getDataType().getTypeKind().equals(IType.Kind.FunctionType)) {
-                var instantiatedValue =
+                // instantiate a new callback adapter to encapsulate the function call
+                var callbackAdapter =
                         this.environment.getTypeInstantiator().instantiate(valueToAssign);
-                assignee.setInternalValue(instantiatedValue);
+                assignee.setInternalValue(callbackAdapter);
             } else {
-                assignee.setInternalValue(valueToAssign.getInternalValue());
+                assignee.setFrom(valueToAssign);
             }
         } else {
             return assignee.setFrom(valueToAssign);
