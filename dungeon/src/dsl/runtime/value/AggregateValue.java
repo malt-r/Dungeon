@@ -2,6 +2,7 @@ package dsl.runtime.value;
 
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.memoryspace.MemorySpace;
+import dsl.semanticanalysis.typesystem.typebuilding.type.AggregateType;
 import dsl.semanticanalysis.typesystem.typebuilding.type.IType;
 
 import java.util.Map;
@@ -100,10 +101,24 @@ public class AggregateValue extends Value {
     @Override
     public boolean setFrom(Value other) {
         if (!(other instanceof AggregateValue otherAggregateValue)) {
-            throw new RuntimeException("Othe value is not an aggregate Value!");
+            throw new RuntimeException("Other value is not an aggregate Value!");
         }
 
-        boolean didSetValue = super.setFrom(other);
+        AggregateType myType = (AggregateType) this.getDataType();
+        AggregateType otherType = (AggregateType) otherAggregateValue.getDataType();
+
+        boolean typesAreIncompatible = false;
+        if (!myType.equals(otherType)) {
+            if (!myType.getOriginType().isAssignableFrom(otherType.getOriginType())) {
+                typesAreIncompatible = true;
+            }
+        }
+
+        if (typesAreIncompatible) {
+            throw new RuntimeException("Incompatible data types, can't assign value!");
+        }
+
+        boolean didSetValue = this.setInternalValue(other);
         if (didSetValue) {
             this.parentMemorySpace = otherAggregateValue.parentMemorySpace;
             this.memorySpace = otherAggregateValue.memorySpace;

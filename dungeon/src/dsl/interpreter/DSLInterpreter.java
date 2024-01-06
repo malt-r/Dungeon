@@ -1360,8 +1360,9 @@ public class DSLInterpreter implements AstVisitor<Object> {
                                 + assigneesType);
             }
         } else {
-            aggregateAssignee.setMemorySpace(aggregateValueToAssign.getMemorySpace());
-            aggregateAssignee.setInternalValue(aggregateValueToAssign.getInternalValue());
+            aggregateAssignee.setFrom(aggregateValueToAssign);
+            //aggregateAssignee.setMemorySpace(aggregateValueToAssign.getMemorySpace());
+            //aggregateAssignee.setInternalValue(aggregateValueToAssign.getInternalValue());
         }
     }
 
