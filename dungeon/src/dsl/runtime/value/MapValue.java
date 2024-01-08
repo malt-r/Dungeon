@@ -88,6 +88,19 @@ public class MapValue extends Value {
         internalMap().clear();
     }
 
+    @Override
+    public boolean setFrom(Value other) {
+        if (!(other instanceof MapValue otherMapValue)) {
+            throw new RuntimeException("Other value is not a set value!");
+        }
+
+        boolean didSetValue = super.setFrom(other);
+        if (didSetValue) {
+            this.internalObjectMap = otherMapValue.internalObjectMap;
+        }
+        return didSetValue;
+    }
+
     // region native_methods
     /**
      * Native method, which implements adding a Value to the internal {@link Map} of a {@link
