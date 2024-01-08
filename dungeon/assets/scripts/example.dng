@@ -396,7 +396,7 @@ fn build_task_single_kettle(single_choice_task t) -> entity<><> {
     var room_set : entity<>;
 
     for task_content content in t.get_content() {
-        var item : entity;
+        var item : quest_item;
         item = build_quest_item(mushroom_type, content);
         place_quest_item(item, room_set);
     }
@@ -430,7 +430,7 @@ fn build_task_single_chest(single_choice_task t) -> entity<><> {
     var room_set : entity<>;
 
     for task_content content in t.get_content() {
-        var item : entity;
+        var item : quest_item;
         item = build_quest_item(scroll_type, content);
         place_quest_item(item, room_set);
     }
@@ -503,7 +503,7 @@ fn build_task_multi_kettle(multiple_choice_task t) -> entity<><> {
 
     // build items from content
     for task_content content in t.get_content() {
-        var item : entity;
+        var item : quest_item;
         item = build_quest_item(mushroom_type, content);
         place_quest_item(item, room_set);
     }
@@ -539,7 +539,7 @@ fn build_task_multi_chest(multiple_choice_task t) -> entity<><> {
 
     // build items from content
     for task_content content in t.get_content() {
-        var item : entity;
+        var item : quest_item;
         item = build_quest_item(scroll_type, content);
         place_quest_item(item, room_set);
     }
