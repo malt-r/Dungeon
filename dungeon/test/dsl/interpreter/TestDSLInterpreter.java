@@ -3019,41 +3019,6 @@ public class TestDSLInterpreter {
     }
 
     @Test
-    // native scenario builders will make this test case obsolete
-    @Ignore
-    public void testScenarioBuilderTypeCreation() {
-        String program =
-                """
-        single_choice_task t1 {
-            description: "Task1",
-            answers: ["1", "2", "3"],
-            correct_answer_index: 2
-        }
-
-        graph g {
-            t1
-        }
-
-        dungeon_config c {
-            dependency_graph: g
-        }
-
-        """;
-
-        DSLInterpreter interpreter = new DSLInterpreter();
-        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
-
-        var task = config.dependencyGraph().nodeIterator().next().task();
-
-        // because the program does not declare any functions returning the `entity<><>` type
-        // (e.g. no scenario builder function), the type for `entity<><>` won't be created before
-        // scanning for scenario builders. It should be created on demand by the DSLInterpreter.
-        // if this fails, this call will throw a RuntimeException, if not, it returns an
-        Optional<Object> builtTask = interpreter.buildTask(task);
-        Assert.assertTrue(builtTask.isEmpty());
-    }
-
-    @Test
     public void testEnumVariantInstantiation() {
         String program =
                 """
