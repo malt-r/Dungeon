@@ -1216,8 +1216,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(EqualityNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        var lhsValue = (Value)node.getLhs().accept(this);
+        var rhsValue = (Value)node.getRhs().accept(this);
+        boolean equals = lhsValue.equals(rhsValue);
+        return new Value(BuiltInType.boolType, equals);
     }
 
     @Override
