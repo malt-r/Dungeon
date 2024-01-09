@@ -86,9 +86,9 @@ expression
     : assignment //expression_rhs?
     ;
 
-expression_rhs
-    : '.' func_call expression_rhs?  #method_call_expression
-    | '.' ID expression_rhs?         #member_access_expression
+member_access_rhs
+    : '.' func_call member_access_rhs?  #method_call_expression
+    | '.' ID member_access_rhs?         #member_access_expression
     ;
 
 assignment
@@ -103,9 +103,9 @@ assignment
     ;*/
 
 assignee
-    : func_call //expression_rhs?  //#assignee_func_call
-    | ID //expression_rhs?  //#assignee_func_call
-    //| ID                        //#assignee_identifier
+    : func_call member_access_rhs?  //#assignee_func_call
+    | ID member_access_rhs?  //#assignee_func_call
+    | ID                        //#assignee_identifier
     ;
 
 logic_or
@@ -241,7 +241,7 @@ set_definition
     | ID                        //#assignee_identifier
     ;*/
 
-primary : ID expression_rhs?
+primary : ID member_access_rhs?
         | STRING_LITERAL
         | TRUE
         | FALSE
@@ -249,8 +249,8 @@ primary : ID expression_rhs?
         | NUM_DEC
         | aggregate_value_def
         | set_definition
-        | grouped_expression expression_rhs?
-        | func_call expression_rhs?
+        | grouped_expression member_access_rhs?
+        | func_call member_access_rhs?
         | list_definition
         ;
 
