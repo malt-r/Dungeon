@@ -83,7 +83,7 @@ var_decl
     ;
 
 expression
-    : assignment expression_rhs?
+    : assignment //expression_rhs?
     ;
 
 expression_rhs
@@ -96,10 +96,16 @@ assignment
     | logic_or
     ;
 
-assignee
+/*assignee
     : func_call '.' assignee    #assignee_func_call
     | ID '.' assignee           #assignee_qualified_name
     | ID                        #assignee_identifier
+    ;*/
+
+assignee
+    : func_call //expression_rhs?  //#assignee_func_call
+    | ID //expression_rhs?  //#assignee_func_call
+    //| ID                        //#assignee_identifier
     ;
 
 logic_or
@@ -229,7 +235,13 @@ set_definition
     : '<' expression_list? '>'
     ;
 
-primary : ID
+/*mem_acc_prim
+    : func_call '.' mem_acc_prim    //#assignee_func_call
+    | ID '.' mem_acc_prim           //#assignee_qualified_name
+    | ID                        //#assignee_identifier
+    ;*/
+
+primary : ID expression_rhs?
         | STRING_LITERAL
         | TRUE
         | FALSE
@@ -237,8 +249,8 @@ primary : ID
         | NUM_DEC
         | aggregate_value_def
         | set_definition
-        | grouped_expression
-        | func_call
+        | grouped_expression expression_rhs?
+        | func_call expression_rhs?
         | list_definition
         ;
 
