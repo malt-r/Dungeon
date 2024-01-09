@@ -106,6 +106,46 @@ public class AggregateValue extends Value {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AggregateValue aggregateValue)) {
+            return false;
+        }
+        // compare based on addresses -> are we comparing to the same object?
+        if (this == aggregateValue) {
+            return true;
+        }
+        if (!this.dataType.equals(aggregateValue.dataType)) {
+            return false;
+        }
+        if (this.getInternalValue() != null && aggregateValue.getInternalValue() != null) {
+            // compare internal values, if they are not null
+            return this.getInternalValue().equals(aggregateValue.getInternalValue());
+        }
+
+        // compare count of values in memory space
+        long myMsSizeWithoutThis = this.getMemorySpace().getValueSet().stream().filter(e -> !e.getKey().equals(Value.THIS_NAME)).count();
+        long otherMsSizeWithoutThis = aggregateValue.getMemorySpace().getValueSet().stream().filter(e -> !e.getKey().equals(Value.THIS_NAME)).count();
+        if (myMsSizeWithoutThis != otherMsSizeWithoutThis) {
+            return false;
+        }
+
+        // compare values in memoryspace
+        var otherMs = aggregateValue;
+        boolean equalMemorySpaces = true;
+        for (var entry : this.getValueSet()) {
+            String name = entry.getKey();
+            Value value = entry.getValue();
+            var valueInOtherMs = aggregateValue.getMemorySpace().resolve(name);
+            if (valueInOtherMs.equals(NONE)) {
+                equalMemorySpaces = false;
+                break;
+            }
+            equalMemorySpaces &= value.equals(valueInOtherMs);
+        }
+        return equalMemorySpaces;
+    }
+
+    @Override
     public boolean setFrom(Value other) {
         if (!(other instanceof AggregateValue otherAggregateValue)) {
             throw new RuntimeException("Other value is not an aggregate Value!");
