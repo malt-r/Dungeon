@@ -249,24 +249,34 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     }
 
     @Override
-    public void enterExpression(DungeonDSLParser.ExpressionContext ctx) {}
+    public void enterExpr_assignment(DungeonDSLParser.Expr_assignmentContext ctx) {
+
+    }
 
     @Override
-    public void exitExpression(DungeonDSLParser.ExpressionContext ctx) {
-        if (ctx.expression_rhs() != null) {
-            Node expressionRhs = astStack.pop();
-            Node assignment = astStack.pop();
-            var memberAccessNode = new MemberAccessNode(assignment, expressionRhs);
-            astStack.push(memberAccessNode);
-        }
+    public void exitExpr_assignment(DungeonDSLParser.Expr_assignmentContext ctx) {
+        // pop the inner nodes
+        Node expression = astStack.pop();
+        Node assignee = astStack.pop();
+
+        Node newExpression = new AssignmentNode(assignee, expression);
+        astStack.push(newExpression);
     }
+
+    @Override
+    public void enterExpr_trivial(DungeonDSLParser.Expr_trivialContext ctx) {
+
+    }
+
+    @Override
+    public void exitExpr_trivial(DungeonDSLParser.Expr_trivialContext ctx) { }
 
     @Override
     public void enterMethod_call_expression(DungeonDSLParser.Method_call_expressionContext ctx) {}
 
     @Override
     public void exitMethod_call_expression(DungeonDSLParser.Method_call_expressionContext ctx) {
-        if (ctx.expression_rhs() != null) {
+        if (ctx.member_access_rhs() != null) {
             Node expressionRhs = astStack.pop();
             Node funcCall = astStack.pop();
             var memberAccessNode = new MemberAccessNode(funcCall, expressionRhs);
@@ -280,7 +290,7 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
 
     @Override
     public void exitMember_access_expression(DungeonDSLParser.Member_access_expressionContext ctx) {
-        if (ctx.expression_rhs() != null) {
+        if (ctx.member_access_rhs() != null) {
             Node expressionRhs = astStack.pop();
             Node identifier = astStack.pop();
             var memberAccessNode = new MemberAccessNode(identifier, expressionRhs);
@@ -289,24 +299,11 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     }
 
     @Override
-    public void enterAssignment(DungeonDSLParser.AssignmentContext ctx) {}
-
-    @Override
-    public void exitAssignment(DungeonDSLParser.AssignmentContext ctx) {
-        // pop the inner node
-        Node assignment = astStack.pop();
-        if (ctx.assignee() != null) {
-            Node assignee = astStack.pop();
-            assignment = new AssignmentNode(assignee, assignment);
-        }
-        astStack.push(assignment);
+    public void enterAssignee_func(DungeonDSLParser.Assignee_funcContext ctx) {
     }
 
     @Override
-    public void enterAssignee_func_call(DungeonDSLParser.Assignee_func_callContext ctx) {}
-
-    @Override
-    public void exitAssignee_func_call(DungeonDSLParser.Assignee_func_callContext ctx) {
+    public void exitAssignee_func(DungeonDSLParser.Assignee_funcContext ctx) {
         Node rhs = astStack.pop();
         Node funcCall = astStack.pop();
         Node assignee = new MemberAccessNode(funcCall, rhs);
@@ -314,15 +311,18 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     }
 
     @Override
-    public void enterAssignee_qualified_name(DungeonDSLParser.Assignee_qualified_nameContext ctx) {}
+    public void enterAssignee_member_access(DungeonDSLParser.Assignee_member_accessContext ctx) {
+
+    }
 
     @Override
-    public void exitAssignee_qualified_name(DungeonDSLParser.Assignee_qualified_nameContext ctx) {
+    public void exitAssignee_member_access(DungeonDSLParser.Assignee_member_accessContext ctx) {
         Node rhs = astStack.pop();
         Node identifier = astStack.pop();
         Node assignee = new MemberAccessNode(identifier, rhs);
         astStack.push(assignee);
     }
+
 
     @Override
     public void enterAssignee_identifier(DungeonDSLParser.Assignee_identifierContext ctx) {}
