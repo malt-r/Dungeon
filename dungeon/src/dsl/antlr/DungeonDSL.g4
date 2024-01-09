@@ -83,7 +83,8 @@ var_decl
     ;
 
 expression
-    : assignment //expression_rhs?
+    : assignee '=' expression           #expr_assignment
+    | logic_or                          #expr_trivial
     ;
 
 member_access_rhs
@@ -91,21 +92,10 @@ member_access_rhs
     | '.' ID member_access_rhs?         #member_access_expression
     ;
 
-assignment
-    : assignee '=' expression
-    | logic_or
-    ;
-
-/*assignee
-    : func_call '.' assignee    #assignee_func_call
-    | ID '.' assignee           #assignee_qualified_name
-    | ID                        #assignee_identifier
-    ;*/
-
 assignee
-    : func_call member_access_rhs?  //#assignee_func_call
-    | ID member_access_rhs?  //#assignee_func_call
-    | ID                        //#assignee_identifier
+    : func_call member_access_rhs   #assignee_func
+    | ID member_access_rhs          #assignee_member_access
+    | ID                            #assignee_identifier
     ;
 
 logic_or
