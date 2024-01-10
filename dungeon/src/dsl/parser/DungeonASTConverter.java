@@ -907,7 +907,14 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
     public void enterPrimary(DungeonDSLParser.PrimaryContext ctx) {}
 
     @Override
-    public void exitPrimary(DungeonDSLParser.PrimaryContext ctx) {}
+    public void exitPrimary(DungeonDSLParser.PrimaryContext ctx) {
+        if (ctx.member_access_rhs() != null) {
+            var rhsExpression = astStack.pop();
+            var lhs = astStack.pop();
+            var memberAccess = new MemberAccessNode(lhs, rhsExpression);
+            astStack.push(memberAccess);
+        }
+    }
 
     @Override
     public void enterDot_def(DungeonDSLParser.Dot_defContext ctx) {}
