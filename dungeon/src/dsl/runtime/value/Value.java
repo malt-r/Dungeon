@@ -183,7 +183,9 @@ public class Value implements IClonable {
         if (this.getInternalValue() == null || value.getInternalValue() == null) {
             return false;
         }
-        return this.getInternalValue().equals(value.getInternalValue());
+        var myInternalValue = this.getInternalValue();
+        var otherInternalValue = value.getInternalValue();
+        return myInternalValue.equals(otherInternalValue);
     }
 
     /**
