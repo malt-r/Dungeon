@@ -4754,7 +4754,6 @@ public class TestDSLInterpreter {
 
     @Test
     public void testAggregatePropertyValueEquality() {
-
         String program =
             """
             single_choice_task t1 {
@@ -4799,6 +4798,120 @@ public class TestDSLInterpreter {
                 print(wizard1.task_component.task == wizard2.task_component.task);
 
                 room_set.add(wizard2);
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testEncapsulatedObjectEquality() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            entity_type wizard_type {
+                draw_component {
+                    path: "character/wizard"
+                },
+                hitbox_component {},
+                interaction_component{},
+                position_component{},
+                task_component{}
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+
+                var room_set : entity<>;
+
+                var wizard1 : entity;
+                var wizard2 : entity;
+
+                wizard1 = instantiate(wizard_type);
+                wizard2 = instantiate(wizard_type);
+                print(wizard1 == wizard2);
+
+                wizard1 = wizard2;
+                print(wizard1 == wizard2);
+
+                room_set.add(wizard2);
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("false" + System.lineSeparator() + "true" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testEnumValueEquality() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                var val1 : tile_direction;
+                var val2 : tile_direction;
+                val1 = tile_direction.N;
+                val2 = tile_direction.N;
+                print(val1 == val2);
+
                 ret_set.add(room_set);
                 return ret_set;
             }
