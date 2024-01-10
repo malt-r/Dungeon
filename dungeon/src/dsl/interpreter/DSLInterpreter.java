@@ -1408,7 +1408,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         IType valueEntryType = mapValueToAssign.getDataType().getElementType();
 
         if (assigneeKeyType.equals(valueKeyType) && assigneeEntryType.equals(valueEntryType)) {
-            return assignee.setInternalValue(mapValueToAssign.getInternalValue());
+            return assignee.setFrom(mapValueToAssign);
         } else {
             assignee.clearMap();
             // TODO: this should not be done implicitly but done specifically, if the
@@ -1443,7 +1443,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         IType assigneeEntryType = assignee.getDataType().getElementType();
         IType newValueEntryType = listValueToAssign.getDataType().getElementType();
         if (assigneeEntryType.equals(newValueEntryType)) {
-            return assignee.setInternalValue(listValueToAssign.getInternalValue());
+            return assignee.setFrom(listValueToAssign);
         } else {
             // TODO: this should not be done implicitly but done specifically, if the
             //  semantic analysis leads to the conclusion that the types are different
