@@ -87,6 +87,39 @@ public class SetValue extends Value {
         return didSetValue;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        // can't use default implementation of HashSet, because it
+        // uses the hashCode()-method for checking equality, which
+        // does not align with the values produced by comparing two
+        // Value-instances with `equals`
+        if (!(obj instanceof SetValue otherValue)) {
+            return false;
+        }
+
+        if (this == otherValue) {
+            return true;
+        }
+        if (!this.dataType.equals(otherValue.dataType)) {
+            return false;
+        }
+        if (this.getInternalValue() == null || otherValue.getInternalValue() == null) {
+            return false;
+        }
+
+        var myInternalValueSet = this.internalValueSet;
+        var otherInternalValueSet = otherValue.internalValueSet;
+        if (myInternalValueSet.size() != otherInternalValueSet.size()) {
+            return false;
+        }
+        for (var value : myInternalValueSet) {
+            if (!otherInternalValueSet.contains(value)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // region native_methods
     /**
      * Native method, which implements adding a Value to the internal {@link Set} of a {@link
