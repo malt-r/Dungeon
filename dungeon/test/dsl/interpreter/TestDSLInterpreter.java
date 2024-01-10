@@ -4994,4 +4994,235 @@ public class TestDSLInterpreter {
         String output = outputStream.toString();
         Assert.assertEquals("true" + System.lineSeparator(), output);
     }
+
+    @Test
+    public void testFunctionValueEquality() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn on_interaction(entity ent1, entity ent2) {
+                print("Hello");
+            }
+
+            fn other_func() {}
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                print(on_interaction == other_func);
+                print(on_interaction == on_interaction);
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("false" + System.lineSeparator() + "true" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testNonAssignableFunctionValue() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn func() {
+                print("Hello");
+            }
+
+            fn other_func() {
+                print("Not Hello");
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                func = other_func;
+                func();
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("Hello" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testFunctionValueCallbackAdapterEquality() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            entity_type wizard_type {
+                draw_component {
+                    path: "character/wizard"
+                },
+                interaction_component{}
+            }
+
+            fn func(entity ent1, entity ent2) {
+                print("Hello");
+            }
+
+            fn other_func(entity ent1, entity ent2) {
+                print("Not Hello");
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                var wizard1 : entity;
+                wizard1 = instantiate(wizard_type);
+
+                wizard1.interaction_component.on_interaction = func;
+                print(wizard1.interaction_component.on_interaction == func);
+                print(wizard1.interaction_component.on_interaction == other_func);
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true" + System.lineSeparator() + "false" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testEncapsulatedFieldValueEquality() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            entity_type wizard_type {
+                draw_component {
+                    path: "character/wizard"
+                },
+                interaction_component{}
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn on_interaction(entity ent1, entity ent2) {
+                print("Hello");
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                var wizard1 : entity;
+                wizard1 = instantiate(wizard_type);
+
+                wizard1.interaction_component.radius = 42.0;
+                print(wizard1.interaction_component.radius == 42.0);
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true" + System.lineSeparator(), output);
+    }
 }
