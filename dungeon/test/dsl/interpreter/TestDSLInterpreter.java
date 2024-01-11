@@ -5406,6 +5406,7 @@ public class TestDSLInterpreter {
         String output = outputStream.toString();
         Assert.assertEquals("true" + System.lineSeparator(), output);
     }
+
     @Test
     public void testSetEqualsAggregateValue() {
         String program =
@@ -5471,5 +5472,66 @@ public class TestDSLInterpreter {
 
         String output = outputStream.toString();
         Assert.assertEquals("true" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void testMapEquals() {
+        String program =
+            """
+            single_choice_task t1 {
+                description: "Task1",
+                answers: ["1", "2", "3"],
+                correct_answer_index: 2,
+                scenario_builder: build_scenario1
+            }
+
+            graph g {
+                t1
+            }
+
+            dungeon_config c {
+                dependency_graph: g
+            }
+
+            fn build_scenario1(single_choice_task t) -> entity<><> {
+                var ret_set : entity<><>;
+                var room_set : entity<>;
+
+                var map1 : [int -> string];
+                var map2 : [int -> string];
+
+                map1.add(1, "Hello");
+                map1.add(2, "World");
+                map1.add(3, "!");
+                map2.add(1, "Hello");
+                map2.add(2, "World");
+                map2.add(3, "!");
+
+                print(map1 == map2);
+
+                map2.clear();
+                map2.add(1, "Hello");
+                map2.add(2, "World");
+
+                print(map1 == map2);
+
+                ret_set.add(room_set);
+                return ret_set;
+            }
+            """;
+
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        var task = config.dependencyGraph().nodeIterator().next().task();
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true" + System.lineSeparator() + "false" + System.lineSeparator(), output);
     }
 }
