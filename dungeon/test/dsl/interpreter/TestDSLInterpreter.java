@@ -5537,4 +5537,64 @@ public class TestDSLInterpreter {
         String output = outputStream.toString();
         Assert.assertEquals("true" + System.lineSeparator() + "false" + System.lineSeparator() + "true" + System.lineSeparator(), output);
     }
+
+
+    @Test
+    public void testPropertyValueEquality() {
+        String program =
+            """
+            entity_type my_type {
+                test_component2 {
+                    member2: 42,
+                    this_is_a_float: 3.14
+                },
+                test_component_with_callback {
+                    consumer: get_property
+                }
+            }
+
+            fn get_property(test_component2 comp) {
+                var other_entity : entity;
+                other_entity = instantiate(my_type);
+                print(comp.this_is_a_float == other_entity.test_component2.this_is_a_float);
+            }
+
+            quest_config c {
+                entity: instantiate(my_type)
+            }
+            """;
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        TestEnvironment env = new TestEnvironment();
+        DSLInterpreter interpreter = new DSLInterpreter();
+        env.getTypeBuilder().createDSLTypeForJavaTypeInScope(env.getGlobalScope(), Entity.class);
+        env.getTypeBuilder()
+            .createDSLTypeForJavaTypeInScope(env.getGlobalScope(), TestComponent2.class);
+        env.getTypeBuilder()
+            .createDSLTypeForJavaTypeInScope(
+                env.getGlobalScope(), TestComponentTestComponent2ConsumerCallback.class);
+        env.getTypeBuilder()
+            .bindProperty(
+                env.getGlobalScope(), TestComponent2.TestComponentPseudoProperty.instance);
+        env.getTypeBuilder()
+            .bindProperty(
+                env.getGlobalScope(), TestComponent2.TestComponent2EntityProperty.instance);
+
+        var config =
+            (CustomQuestConfig)
+                Helpers.generateQuestConfigWithCustomTypes(program, env, interpreter);
+
+        var entity = config.entity();
+        var componentWithConsumer =
+            (TestComponentTestComponent2ConsumerCallback) entity.components.get(0);
+        var testComponent2 = (TestComponent2) entity.components.get(1);
+        componentWithConsumer.consumer.accept(testComponent2);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true" + System.lineSeparator(), output);
+    }
 }
