@@ -5515,6 +5515,9 @@ public class TestDSLInterpreter {
 
                 print(map1 == map2);
 
+                map1 = map2;
+                print(map1 == map2);
+
                 ret_set.add(room_set);
                 return ret_set;
             }
@@ -5532,6 +5535,6 @@ public class TestDSLInterpreter {
         var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
 
         String output = outputStream.toString();
-        Assert.assertEquals("true" + System.lineSeparator() + "false" + System.lineSeparator(), output);
+        Assert.assertEquals("true" + System.lineSeparator() + "false" + System.lineSeparator() + "true" + System.lineSeparator(), output);
     }
 }
