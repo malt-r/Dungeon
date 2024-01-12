@@ -98,10 +98,13 @@ public class PrototypeValue extends Value implements IType {
         if (this.internalType != value.internalType) {
             return false;
         }
-        // TODO: value equality
 
         // address-equality
-        return this == obj;
+        if (this == obj) {
+            return true;
+        }
+
+        return true;
     }
 
     @Override
