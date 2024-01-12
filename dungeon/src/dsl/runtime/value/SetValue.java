@@ -47,11 +47,7 @@ public class SetValue extends Value {
         }
         internalValueSet.add(internalValue);
 
-        // TODO: this should either be a copy operation!
-        //  or the set should only store the internal values and
-        //  don't even store the Value-instances
-        boolean inserted = internalSet().add((Value) value.clone());
-        return true;
+        return internalSet().add((Value) value.clone());
     }
 
     /**
