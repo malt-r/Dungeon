@@ -622,14 +622,14 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
 
     @Override
     public Void visit(LogicOrNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
     public Void visit(LogicAndNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
@@ -640,26 +640,26 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
 
     @Override
     public Void visit(ComparisonNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
     public Void visit(TermNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
     public Void visit(FactorNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
     public Void visit(UnaryNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        visitChildren(node);
+        return null;
     }
 
     @Override
