@@ -3,6 +3,7 @@ package dsl.helpers;
 import antlr.main.DungeonDSLLexer;
 import antlr.main.DungeonDSLParser;
 
+import core.Entity;
 import dsl.interpreter.DSLInterpreter;
 import dsl.parser.DungeonASTConverter;
 import dsl.parser.ast.Node;
@@ -14,16 +15,21 @@ import dsl.semanticanalysis.environment.IEnvironment;
 import dsl.semanticanalysis.symbol.ScopedSymbol;
 import dsl.semanticanalysis.symbol.Symbol;
 
+import entrypoint.DungeonConfig;
 import entrypoint.ParsedFile;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import task.tasktype.quizquestion.SingleChoice;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashSet;
 
 public class Helpers {
 
@@ -177,5 +183,16 @@ public class Helpers {
         interpreter.initializeRuntime(environment, latestParsedFile.filePath());
 
         return interpreter.generateQuestConfig(ast, latestParsedFile);
+    }
+
+    public static HashSet<HashSet<Entity>> buildTask(String program, ByteArrayOutputStream outputStream) {
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        System.setOut(new PrintStream(outputStream));
+        return (HashSet<HashSet<Entity>>) interpreter.buildTask(task).get();
     }
 }
