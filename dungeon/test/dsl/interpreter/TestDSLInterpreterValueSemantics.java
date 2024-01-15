@@ -1507,4 +1507,93 @@ public class TestDSLInterpreterValueSemantics {
         boolean equals = val1.equals(val2);
         Assert.assertTrue(equals);
     }
+
+    @Test
+    public void testSetInsertionOfSet() {
+        String program =
+            """
+        single_choice_task t1 {
+            description: "Task1",
+            answers: [ "1", "2", "3", "4"],
+            correct_answer_index: 3
+        }
+
+        graph g {
+            t1
+        }
+
+        dungeon_config c {
+            dependency_graph: g
+        }
+
+        fn build_task(single_choice_task t) -> entity<><> {
+            var return_set : entity<><>;
+            var room_set : entity<>;
+
+            var main_set : int<><>;
+            var cont : bool;
+            var counter : int;
+            var counter_list : int[];
+            counter_list.add(1);
+            counter_list.add(2);
+            counter_list.add(3);
+            counter_list.add(4);
+            cont = true;
+
+            while cont {
+                var insert_set : int<>;
+                insert_set.add(0);
+                insert_set.add(1);
+                insert_set.add(2);
+                main_set.add(insert_set);
+
+                // check loop condition
+                counter = counter_list.get(counter);
+                if counter == 4  {
+                    cont = false;
+                }
+            }
+
+            var first_entry : bool;
+            first_entry = true;
+            for int<> entry in main_set {
+                if first_entry {
+                    entry.add(4);
+                    first_entry = false;
+                }
+            }
+
+            print(main_set.size());
+
+            var sets_with_three_entries : int;
+            var sets_with_four_entries : int;
+
+            for int<> entry in main_set {
+                if entry.size() == 3 {
+                    sets_with_three_entries = counter_list.get(sets_with_three_entries);
+                }
+                if entry.size() == 4 {
+                    sets_with_four_entries = counter_list.get(sets_with_four_entries);
+                }
+            }
+            print(sets_with_three_entries);
+            print(sets_with_four_entries);
+
+            return_set.add(room_set);
+            return return_set;
+        }
+        """;
+        DSLInterpreter interpreter = new DSLInterpreter();
+        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
+        var task = (SingleChoice) config.dependencyGraph().nodeIterator().next().task();
+
+        // print currently just prints to system.out, so we need to
+        // check the contents for the printed string
+        var outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+        var builtTask = (HashSet<HashSet<core.Entity>>) interpreter.buildTask(task).get();
+
+        String output = outputStream.toString();
+        Assert.assertEquals("4" + System.lineSeparator() + "3" + System.lineSeparator() + "1" + System.lineSeparator(), output);
+    }
 }
