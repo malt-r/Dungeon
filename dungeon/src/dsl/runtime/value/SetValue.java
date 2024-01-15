@@ -47,7 +47,10 @@ public class SetValue extends Value {
         }
         internalValueSet.add(internalValue);
 
-        return internalSet().add((Value) value.clone());
+        var insertionValue = (Value)value.clone();
+        insertionValue.setFrom(value);
+
+        return internalSet().add(insertionValue);
     }
 
     /**
@@ -174,6 +177,21 @@ public class SetValue extends Value {
             Value valueToCheck = (Value) valueToCheckNode.accept(interpreter);
 
             return setValue.internalValueSet.contains(valueToCheck.getInternalValue());
+        }
+    }
+
+    public static class ClearMethod implements IInstanceCallable {
+
+        public static SetValue.ClearMethod instance = new SetValue.ClearMethod();
+
+        private ClearMethod() {}
+
+        @Override
+        public Object call(DSLInterpreter interpreter, Object instance, List<Node> parameters) {
+            SetValue setValue = (SetValue) instance;
+            setValue.internalValueSet.clear();
+            setValue.internalSet().clear();
+            return null;
         }
     }
     // endregion
