@@ -1230,8 +1230,54 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(TermNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Value lhs = (Value)node.getLhs().accept(this);
+        Value rhs = (Value)node.getRhs().accept(this);
+
+        assert lhs.getDataType() == rhs.getDataType();
+        IType valueType = lhs.getDataType();
+
+        // we just assume, that lhs and rhs have the same datatype, checked in semantic analysis
+        switch (node.getTermType()) {
+            case plus:
+            {
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    Integer sum = lhsInt + rhsInt;
+                    return new Value(BuiltInType.intType, sum);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    Float sum = lhsFloat + rhsFloat;
+                    return new Value(BuiltInType.floatType, sum);
+                } else if (valueType.equals(BuiltInType.stringType)) {
+                    // concatenate strings
+                    String lhsString = (String)lhs.getInternalValue();
+                    String rhsString = (String)rhs.getInternalValue();
+                    String concat = lhsString + rhsString;
+                    return new Value(BuiltInType.stringType, concat);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for addition!");
+                }
+            }
+            case minus:
+            {
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    Integer sub = lhsInt - rhsInt;
+                    return new Value(BuiltInType.intType, sub);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    Float sub = lhsFloat - rhsFloat;
+                    return new Value(BuiltInType.floatType, sub);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for subtraction!");
+                }
+            }
+        }
+        return Value.NONE;
     }
 
     @Override
