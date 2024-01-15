@@ -106,4 +106,60 @@ public void addInteger() {
         String output = outputStream.toString();
         Assert.assertEquals("Hello, World!" + System.lineSeparator(), output);
     }
+
+    @Test
+    public void subInteger() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var int1 : int;
+                    int1 = 21;
+                    var int2 : int;
+                    int2 = int1 - 63;
+
+                    print(int2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("-42" + System.lineSeparator(), output);
+    }
+
+    @Test
+    public void subFloat() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var f1 : float;
+                    f1 = 3.14;
+                    var f2 : float;
+                    f2 = f1 - 6.28;
+
+                    print(f2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("-3.14" + System.lineSeparator(), output);
+    }
 }
