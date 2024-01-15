@@ -18,10 +18,12 @@ import dsl.parser.ast.Node;
 import dsl.runtime.memoryspace.EncapsulatedObject;
 import dsl.runtime.memoryspace.IMemorySpace;
 import dsl.runtime.value.AggregateValue;
+import dsl.runtime.value.ListValue;
 import dsl.runtime.value.PrototypeValue;
 import dsl.runtime.value.Value;
 import dsl.semanticanalysis.analyzer.SemanticAnalyzer;
 import dsl.semanticanalysis.environment.GameEnvironment;
+import dsl.semanticanalysis.scope.Scope;
 import dsl.semanticanalysis.symbol.FunctionSymbol;
 import dsl.semanticanalysis.typesystem.*;
 import dsl.semanticanalysis.typesystem.typebuilding.annotation.DSLType;
@@ -3017,41 +3019,6 @@ public class TestDSLInterpreter {
     }
 
     @Test
-    // native scenario builders will make this test case obsolete
-    @Ignore
-    public void testScenarioBuilderTypeCreation() {
-        String program =
-                """
-        single_choice_task t1 {
-            description: "Task1",
-            answers: ["1", "2", "3"],
-            correct_answer_index: 2
-        }
-
-        graph g {
-            t1
-        }
-
-        dungeon_config c {
-            dependency_graph: g
-        }
-
-        """;
-
-        DSLInterpreter interpreter = new DSLInterpreter();
-        DungeonConfig config = (DungeonConfig) interpreter.getQuestConfig(program);
-
-        var task = config.dependencyGraph().nodeIterator().next().task();
-
-        // because the program does not declare any functions returning the `entity<><>` type
-        // (e.g. no scenario builder function), the type for `entity<><>` won't be created before
-        // scanning for scenario builders. It should be created on demand by the DSLInterpreter.
-        // if this fails, this call will throw a RuntimeException, if not, it returns an
-        Optional<Object> builtTask = interpreter.buildTask(task);
-        Assert.assertTrue(builtTask.isEmpty());
-    }
-
-    @Test
     public void testEnumVariantInstantiation() {
         String program =
                 """
@@ -3373,7 +3340,7 @@ public class TestDSLInterpreter {
                 my_list.add("Hello");
                 my_list.add("World");
                 my_list.add("!");
-                for int entry in my_list count i {
+                for string entry in my_list count i {
                     print(i);
                     print(entry);
                 }
@@ -4179,7 +4146,7 @@ public class TestDSLInterpreter {
                 var return_set : entity<><>;
                 var room_set : entity<>;
 
-                var item : entity;
+                var item : quest_item;
                 var content : task_content;
                 content = t.get_content().get(0);
                 item = build_quest_item(my_type, content);

@@ -1178,4 +1178,43 @@ public class TestDungeonASTConverter {
         IdNode asIdNode = (IdNode) asIdChild;
         Assert.assertEquals("no", asIdNode.getName());
     }
+
+    @Test
+    public void testEqualityWithMemberAccess() {
+        String program = """
+            fn test() {
+                x.y.z == u.v.w;
+            }
+            """;
+
+        var ast = Helpers.getASTFromString(program);
+        var funcDefNode = (FuncDefNode) ast.getChild(0);
+        var stmts = funcDefNode.getStmts();
+
+        var equalityStmt = stmts.get(0);
+        Assert.assertEquals(Node.Type.Equality, equalityStmt.type);
+        var equalityNode = (EqualityNode) equalityStmt;
+
+        var lhs = equalityNode.getLhs();
+        Assert.assertEquals(Node.Type.MemberAccess, lhs.type);
+        var lhsMemAccess = (MemberAccessNode) lhs;
+        var xNode = (IdNode)lhsMemAccess.getLhs();
+        Assert.assertEquals("x", xNode.getName());
+        var yzNode = (MemberAccessNode)lhsMemAccess.getRhs();
+        var yNode = (IdNode)yzNode.getLhs();
+        Assert.assertEquals("y", yNode.getName());
+        var zNode = (IdNode)yzNode.getRhs();
+        Assert.assertEquals("z", zNode.getName());
+
+        var rhs = equalityNode.getRhs();
+        Assert.assertEquals(Node.Type.MemberAccess, rhs.type);
+        var rhsMemAccess = (MemberAccessNode) rhs;
+        var uNode = (IdNode)rhsMemAccess.getLhs();
+        Assert.assertEquals("u", uNode.getName());
+        var vwNode = (MemberAccessNode)rhsMemAccess.getRhs();
+        var vNode = (IdNode)vwNode.getLhs();
+        Assert.assertEquals("v", vNode.getName());
+        var wNode = (IdNode)vwNode.getRhs();
+        Assert.assertEquals("w", wNode.getName());
+    }
 }

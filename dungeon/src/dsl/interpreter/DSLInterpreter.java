@@ -509,7 +509,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         this.globalSpace = new MemorySpace();
         this.memoryStack.push(this.globalSpace);
 
-        FileScope fs = (FileScope) environment.getFileScope(entryPointFilePath);
+        FileScope fs = environment.getFileScope(entryPointFilePath);
         this.environment = new RuntimeEnvironment(environment, this, fs);
 
         initializeScenarioBuilderStorage();
@@ -615,8 +615,14 @@ public class DSLInterpreter implements AstVisitor<Object> {
             return Value.NONE;
         }
         if (type.getTypeKind().equals(IType.Kind.Basic)) {
-            Object internalValue = Value.getDefaultValue(type);
-            return new Value(type, internalValue);
+            if (type.equals(PrototypeValue.PROTOTYPE)) {
+                return new PrototypeValue(PrototypeValue.PROTOTYPE, null);
+            } else if (type.equals(PrototypeValue.ITEM_PROTOTYPE)) {
+                return new PrototypeValue(PrototypeValue.ITEM_PROTOTYPE, null);
+            } else {
+                Object internalValue = Value.getDefaultValue(type);
+                return new Value(type, internalValue);
+            }
         } else if (type.getTypeKind().equals(IType.Kind.Aggregate)
                 || type.getTypeKind().equals(IType.Kind.AggregateAdapted)) {
             AggregateValue value = new AggregateValue(type, getCurrentMemorySpace());
@@ -1210,8 +1216,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(EqualityNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        var lhsValue = (Value)node.getLhs().accept(this);
+        var rhsValue = (Value)node.getRhs().accept(this);
+        boolean equals = lhsValue.equals(rhsValue);
+        return new Value(BuiltInType.boolType, equals);
     }
 
     @Override
@@ -1320,32 +1328,22 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     // region value-setting
     private void setAggregateValue(AggregateValue aggregateAssignee, Value valueToAssign) {
-        if (!(valueToAssign instanceof AggregateValue aggregateValueToAssign)) {
+        AggregateValue aggregateValueToAssign;
+        if (!(valueToAssign instanceof AggregateValue)) {
             // if the value to assign is not an aggregate value, we might have
             // the case, where we want to assign a basic Value to a Content object
 
             IType assigneesType = aggregateAssignee.getDataType();
+            Object objectToEncapsulate;
             if (assigneesType.getName().equals("content")) {
                 // TODO: this is a temporary solution for "casting" the value to a content
                 //  once typechecking is implemented, this will be refactored
 
                 String stringValue = valueToAssign.getInternalValue().toString();
-                Quiz.Content content = new Quiz.Content(stringValue);
-                EncapsulatedObject encapsulatedObject =
-                        new EncapsulatedObject(
-                                content, (AggregateType) assigneesType, this.environment);
-
-                aggregateAssignee.setMemorySpace(encapsulatedObject);
-                aggregateAssignee.setInternalValue(content);
+                objectToEncapsulate = new Quiz.Content(stringValue);
             } else if (assigneesType.getName().equals("element")) {
                 String stringValue = valueToAssign.getInternalValue().toString();
-                Element<String> content = new Element<>(stringValue);
-                EncapsulatedObject encapsulatedObject =
-                        new EncapsulatedObject(
-                                content, (AggregateType) assigneesType, this.environment);
-
-                aggregateAssignee.setMemorySpace(encapsulatedObject);
-                aggregateAssignee.setInternalValue(content);
+                objectToEncapsulate = new Element<>(stringValue);
             } else {
                 throw new RuntimeException(
                         "Can't assign Value of type "
@@ -1353,10 +1351,17 @@ public class DSLInterpreter implements AstVisitor<Object> {
                                 + " to Value of "
                                 + assigneesType);
             }
+
+            // do the encapsulation
+            EncapsulatedObject encapsulatedObject =
+                new EncapsulatedObject(
+                    objectToEncapsulate, (AggregateType) assigneesType, this.environment);
+            aggregateValueToAssign = AggregateValue.fromEncapsulatedObject(this.getCurrentMemorySpace(), encapsulatedObject);
+            aggregateAssignee.setFrom(aggregateValueToAssign);
         } else {
-            aggregateAssignee.setMemorySpace(aggregateValueToAssign.getMemorySpace());
-            aggregateAssignee.setInternalValue(aggregateValueToAssign.getInternalValue());
+            aggregateValueToAssign = (AggregateValue) valueToAssign;
         }
+        aggregateAssignee.setFrom(aggregateValueToAssign);
     }
 
     private boolean setSetValue(SetValue assignee, Value valueToAssign) {
@@ -1367,20 +1372,26 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to SetValue, it is not a SetValue itself!");
         }
 
-        assignee.clearSet();
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType newValueEntryType = setValueToAssign.getDataType().getElementType();
+        if (assigneeEntryType.equals(newValueEntryType)) {
+            return assignee.setFrom(setValueToAssign);
+        } else {
+            assignee.clearSet();
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
+            Set<Value> valuesToAdd = setValueToAssign.getValues();
+            for (Value valueToAdd : valuesToAdd) {
+                Value entryAssigneeValue = createDefaultValue(assigneeEntryType);
 
-        IType entryType = assignee.getDataType().getElementType();
-        Set<Value> valuesToAdd = setValueToAssign.getValues();
-        for (Value valueToAdd : valuesToAdd) {
-            Value entryAssigneeValue = createDefaultValue(entryType);
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryAssigneeValue, valueToAdd);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryAssigneeValue, valueToAdd);
-
-            assignee.addValue(entryAssigneeValue);
+                assignee.addValue(entryAssigneeValue);
+            }
+            return true;
         }
-        return true;
     }
 
     private boolean setMapValue(MapValue assignee, Value valueToAssign) {
@@ -1391,25 +1402,33 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to MapValue, it is not a MapValue itself!");
         }
 
-        assignee.clearMap();
+        IType assigneeKeyType = assignee.getDataType().getKeyType();
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType valueKeyType = mapValueToAssign.getDataType().getKeyType();
+        IType valueEntryType = mapValueToAssign.getDataType().getElementType();
 
-        IType keyType = assignee.getDataType().getKeyType();
-        IType entryType = assignee.getDataType().getElementType();
+        if (assigneeKeyType.equals(valueKeyType) && assigneeEntryType.equals(valueEntryType)) {
+            return assignee.setFrom(mapValueToAssign);
+        } else {
+            assignee.clearMap();
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
 
-        Map<Value, Value> valuesToAdd = mapValueToAssign.internalMap();
-        for (var entryToAdd : valuesToAdd.entrySet()) {
+            Map<Value, Value> valuesToAdd = mapValueToAssign.internalMap();
+            for (var entryToAdd : valuesToAdd.entrySet()) {
 
-            Value entryKeyValue = createDefaultValue(keyType);
-            Value entryElementValue = createDefaultValue(entryType);
+                Value entryKeyValue = createDefaultValue(assigneeKeyType);
+                Value entryElementValue = createDefaultValue(assigneeEntryType);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryKeyValue, entryToAdd.getKey());
-            setValue(entryElementValue, entryToAdd.getValue());
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryKeyValue, entryToAdd.getKey());
+                setValue(entryElementValue, entryToAdd.getValue());
 
-            assignee.addValue(entryKeyValue, entryElementValue);
+                assignee.addValue(entryKeyValue, entryElementValue);
+            }
+            return true;
         }
-        return true;
     }
 
     private boolean setListValue(ListValue assignee, Value valueToAssign) {
@@ -1420,19 +1439,26 @@ public class DSLInterpreter implements AstVisitor<Object> {
                             + " to ListValue, it is not a ListValue itself!");
         }
 
-        assignee.clearList();
+        // TODO: should just implement the cloning-behaviour for this
+        IType assigneeEntryType = assignee.getDataType().getElementType();
+        IType newValueEntryType = listValueToAssign.getDataType().getElementType();
+        if (assigneeEntryType.equals(newValueEntryType)) {
+            return assignee.setFrom(listValueToAssign);
+        } else {
+            // TODO: this should not be done implicitly but done specifically, if the
+            //  semantic analysis leads to the conclusion that the types are different
+            assignee.clearList();
+            for (var valueToAdd : listValueToAssign.getValues()) {
+                Value entryAssigneeValue = createDefaultValue(assigneeEntryType);
 
-        IType entryType = assignee.getDataType().getElementType();
-        for (var valueToAdd : listValueToAssign.getValues()) {
-            Value entryAssigneeValue = createDefaultValue(entryType);
+                // we cannot directly set the entryValueToAssign, because we potentially
+                // have to do type conversions (convert a String into a Content-Object)
+                setValue(entryAssigneeValue, valueToAdd);
 
-            // we cannot directly set the entryValueToAssign, because we potentially
-            // have to do type conversions (convert a String into a Content-Object)
-            setValue(entryAssigneeValue, valueToAdd);
-
-            assignee.addValue(entryAssigneeValue);
+                assignee.addValue(entryAssigneeValue);
+            }
+            return true;
         }
-        return true;
     }
 
     private boolean setFunctionValue(FunctionValue assignee, Value valueToAssign) {
@@ -1449,7 +1475,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
         return true;
     }
 
-    private boolean setValue(Value assignee, Value valueToAssign) {
+    public boolean setValue(Value assignee, Value valueToAssign) {
         if (assignee == Value.NONE) {
             return false;
         }
@@ -1471,14 +1497,15 @@ public class DSLInterpreter implements AstVisitor<Object> {
             assignee.setInternalValue(instantiatedValue);
         } else if (assignee instanceof EncapsulatedField encapsulatedField) {
             if (assignee.getDataType().getTypeKind().equals(IType.Kind.FunctionType)) {
-                var instantiatedValue =
+                // instantiate a new callback adapter to encapsulate the function call
+                var callbackAdapter =
                         this.environment.getTypeInstantiator().instantiate(valueToAssign);
-                assignee.setInternalValue(instantiatedValue);
+                assignee.setInternalValue(callbackAdapter);
             } else {
-                assignee.setInternalValue(valueToAssign.getInternalValue());
+                assignee.setFrom(valueToAssign);
             }
         } else {
-            assignee.setInternalValue(valueToAssign.getInternalValue());
+            return assignee.setFrom(valueToAssign);
         }
         return true;
     }
@@ -1514,7 +1541,7 @@ public class DSLInterpreter implements AstVisitor<Object> {
             internalIterator = internalList.iterator();
         } else if (iterableType.getTypeKind().equals(IType.Kind.SetType)) {
             var setValue = (SetValue) iterableValue;
-            Set<Value> internalSet = setValue.internalSet();
+            Set<Value> internalSet = setValue.getValues();
             internalIterator = internalSet.iterator();
         } else {
             throw new RuntimeException(

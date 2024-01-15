@@ -39,7 +39,14 @@ public interface IEnvironment {
 
     void addFileScope(FileScope fileScope);
 
-    IScope getFileScope(Path file);
+    FileScope getFileScope(Path file);
+
+    /**
+     * The {@link FileScope} relating to "no file" needs the {@link IEnvironment}-specific
+     * global Scope as a parent, so we define it here
+     * @return
+     */
+    FileScope getNullFileScope();
 
     HashMap<Path, FileScope> getFileScopes();
 

@@ -3,6 +3,7 @@ package dsl.interpreter.mockecs;
 import dsl.semanticanalysis.typesystem.extension.IDSLExtensionMethod;
 import dsl.semanticanalysis.typesystem.extension.IDSLExtensionProperty;
 import dsl.semanticanalysis.typesystem.typebuilding.annotation.*;
+import org.junit.Test;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -26,6 +27,24 @@ public class TestComponent2 extends Component {
         @Override
         public Float get(TestComponent2 instance) {
             return instance.hiddenFloat;
+        }
+    }
+
+    @DSLTypeProperty(name = "test_component2", extendedType = Entity.class)
+    public static class TestComponent2EntityProperty
+        implements IDSLExtensionProperty<Entity, TestComponent2> {
+        public static TestComponent2EntityProperty instance = new TestComponent2EntityProperty();
+
+        private TestComponent2EntityProperty() {}
+
+        @Override
+        public void set(Entity instance, TestComponent2 valueToSet) {
+            instance.components.add(valueToSet);
+        }
+
+        @Override
+        public TestComponent2 get(Entity instance) {
+            return (TestComponent2) instance.components.stream().filter(c -> c instanceof TestComponent2).toList().get(0);
         }
     }
 

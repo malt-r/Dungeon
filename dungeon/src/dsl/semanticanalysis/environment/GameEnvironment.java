@@ -44,6 +44,7 @@ import dslinterop.nativescenariobuilder.NativeScenarioBuilder;
 
 import entrypoint.DungeonConfig;
 
+import entrypoint.ParsedFile;
 import task.*;
 import task.dslinterop.*;
 import task.game.components.TaskComponent;
@@ -79,6 +80,7 @@ public class GameEnvironment implements IEnvironment {
     protected final SymbolTable symbolTable;
     protected final Scope globalScope;
     protected final HashMap<Path, FileScope> fileScopes = new HashMap<>();
+    protected final FileScope nullFileScope;
     protected final RuntimeObjectTranslator runtimeObjectTranslator = new RuntimeObjectTranslator();
     protected final Path relLibPath;
 
@@ -93,6 +95,7 @@ public class GameEnvironment implements IEnvironment {
 
         this.typeBuilder = new TypeBuilder();
         this.globalScope = new Scope();
+        this.nullFileScope = new FileScope(new ParsedFile(null, Node.NONE), this.globalScope);
         this.symbolTable = new SymbolTable(this.globalScope);
 
         bindBuiltInTypes();
@@ -225,12 +228,17 @@ public class GameEnvironment implements IEnvironment {
     }
 
     @Override
-    public IScope getFileScope(Path file) {
-        IScope scope = this.fileScopes.get(file);
+    public FileScope getFileScope(Path file) {
+        FileScope scope = this.fileScopes.get(file);
         if (scope == null) {
-            scope = Scope.NULL;
+            scope = this.nullFileScope;
         }
         return scope;
+    }
+
+    @Override
+    public FileScope getNullFileScope() {
+        return this.nullFileScope;
     }
 
     @Override
@@ -350,6 +358,10 @@ public class GameEnvironment implements IEnvironment {
         NativeFunction placeQuestItem =
                 new NativePlaceQuestItem(Scope.NULL, questItemType, entitySetType);
         nativeFunctions.add(placeQuestItem);
+
+        NativeFunction buildWorldItem =
+                new NativeBuildQuestItemEntity(Scope.NULL, entityType, questItemType);
+        nativeFunctions.add(buildWorldItem);
 
         NativeFunction addFillerContent = new GenerateRandomFillerContent(Scope.NULL, entityType);
         nativeFunctions.add(addFillerContent);
@@ -486,6 +498,39 @@ public class GameEnvironment implements IEnvironment {
             entitySetValue.addValue(worldEntityValue);
 
             return null;
+        }
+
+        @Override
+        public ICallable.Type getCallableType() {
+            return ICallable.Type.Native;
+        }
+    }
+
+    private static class NativeBuildQuestItemEntity extends NativeFunction {
+        /**
+         * Constructor
+         *
+         * @param parentScope parent scope of this function
+         * @param questItemType the {@link IType} representing quest items
+         */
+        public NativeBuildQuestItemEntity(
+                IScope parentScope, IType entityType, IType questItemType) {
+            super("build_item_entity", parentScope, new FunctionType(entityType, questItemType));
+        }
+
+        @Override
+        public Object call(DSLInterpreter interpreter, List<Node> parameters) {
+            assert parameters != null && parameters.size() > 0;
+
+            // evaluate parameters
+            RuntimeEnvironment rtEnv = interpreter.getRuntimeEnvironment();
+            Value questItemValue = (Value) parameters.get(0).accept(interpreter);
+
+            // build an entity for the quest item with the WorldItemBuilder
+            var questItemObject = questItemValue.getInternalValue();
+            var worldEntity = WorldItemBuilder.buildWorldItem((Item) questItemObject);
+
+            return worldEntity;
         }
 
         @Override
