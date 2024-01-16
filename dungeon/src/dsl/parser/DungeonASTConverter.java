@@ -18,10 +18,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 // importing all required classes from symbolTable will be to verbose
 // CHECKSTYLE:OFF: AvoidStarImport
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * This class converts the {@link ParseTree} created by the antlr parser into an AST. While walking
@@ -874,7 +871,11 @@ public class DungeonASTConverter implements antlr.main.DungeonDSLListener {
 
     @Override
     public void exitGrouped_expression(DungeonDSLParser.Grouped_expressionContext ctx) {
-        throw new UnsupportedOperationException();
+        Node innerExpression = astStack.pop();
+        ArrayList<Node> list = new ArrayList<>();
+        list.add(innerExpression);
+        Node groupedExpression = new Node(Node.Type.GroupedExpression, list);
+        astStack.push(groupedExpression);
     }
 
     @Override

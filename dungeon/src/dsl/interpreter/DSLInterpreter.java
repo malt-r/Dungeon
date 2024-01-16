@@ -1366,8 +1366,13 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(Node node) {
-        if (node.type.equals(Node.Type.ScopeExitMark)) {
-            this.memoryStack.pop();
+        switch (node.type) {
+            case ScopeExitMark:
+                this.memoryStack.pop();
+            case GroupedExpression:
+                return node.getChild(0).accept(this);
+            default:
+                break;
         }
         return null;
     }

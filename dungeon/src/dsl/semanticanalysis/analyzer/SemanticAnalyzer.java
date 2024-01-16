@@ -252,8 +252,8 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
 
                 break;
             case PropertyDefinitionList:
-                visitChildren(node);
             case ParamList:
+            case GroupedExpression:
                 visitChildren(node);
             default:
                 break;
@@ -810,6 +810,8 @@ public class SemanticAnalyzer implements AstVisitor<Void> {
 
         return null;
     }
+
+
 
     // region ASTVisitor implementation for nodes unrelated to semantic analysis
 
