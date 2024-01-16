@@ -1282,8 +1282,48 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(FactorNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Value lhs = (Value)node.getLhs().accept(this);
+        Value rhs = (Value)node.getRhs().accept(this);
+
+        assert lhs.getDataType() == rhs.getDataType();
+        IType valueType = lhs.getDataType();
+
+        // we just assume, that lhs and rhs have the same datatype, checked in semantic analysis
+        switch (node.getFactorType()) {
+            case divide:
+            {
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    Integer div = lhsInt / rhsInt;
+                    return new Value(BuiltInType.intType, div);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    Float div = lhsFloat / rhsFloat;
+                    return new Value(BuiltInType.floatType, div);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for division!");
+                }
+            }
+            case multiply:
+            {
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    Integer mul = lhsInt * rhsInt;
+                    return new Value(BuiltInType.intType, mul);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    Float mul = lhsFloat * rhsFloat;
+                    return new Value(BuiltInType.floatType, mul);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for multiplication!");
+                }
+            }
+        }
+        return Value.NONE;
     }
 
     @Override
