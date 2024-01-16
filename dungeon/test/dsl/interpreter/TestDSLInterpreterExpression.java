@@ -270,4 +270,32 @@ public void addInteger() {
         String output = outputStream.toString();
         Assert.assertEquals("-42"+System.lineSeparator(), output);
     }
+
+    @Test
+    public void inequality() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var n1 : int;
+                    n1 = 42;
+                    var n2 : int;
+                    n2 = 32;
+                    print(n1 != n2);
+                    print(n1 != n1);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true"+System.lineSeparator() + "false"+System.lineSeparator(), output);
+    }
 }
