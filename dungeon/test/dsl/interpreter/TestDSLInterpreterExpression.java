@@ -371,4 +371,79 @@ public void addInteger() {
             "true"+System.lineSeparator(),
             output);
     }
+
+    @Test
+    public void logicAnd() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var b1 : bool;
+                    b1 = true;
+                    var b2 : bool;
+                    b2 = true;
+                    var b3 : bool;
+                    b3 = false;
+                    print(b1 and b2);
+                    print(b1 and b3);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true"+System.lineSeparator() + "false"+System.lineSeparator(), output);
+    }
+
+    @Test
+    public void logicAndShortCircuit() {
+        String program =
+            testProgramPreamble +
+                """
+                fn lhs_true() -> bool {
+                    print("lhs_true");
+                    return true;
+                }
+
+                fn lhs_false() -> bool {
+                    print("lhs_false");
+                    return false;
+                }
+
+                fn rhs() -> bool {
+                    print("rhs");
+                    return true;
+                }
+
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    print(lhs_true() and rhs());
+                    print(lhs_false() and rhs());
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "lhs_true"+System.lineSeparator() +
+                "rhs"+System.lineSeparator() +
+                "true"+System.lineSeparator() +
+                "lhs_false"+System.lineSeparator() +
+                "false"+System.lineSeparator(),
+            output);
+    }
 }
