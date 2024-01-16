@@ -1219,7 +1219,10 @@ public class DSLInterpreter implements AstVisitor<Object> {
         var lhsValue = (Value)node.getLhs().accept(this);
         var rhsValue = (Value)node.getRhs().accept(this);
         boolean equals = lhsValue.equals(rhsValue);
-        return new Value(BuiltInType.boolType, equals);
+        return switch (node.getEqualityType()) {
+            case equals -> new Value(BuiltInType.boolType, equals);
+            case notEquals -> new Value(BuiltInType.boolType, !equals);
+        };
     }
 
     @Override
