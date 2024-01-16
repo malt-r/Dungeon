@@ -1288,8 +1288,32 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(UnaryNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Value innerValue = (Value)node.getInnerNode().accept(this);
+        IType valueType = innerValue.getDataType();
+
+        // we just assume, that lhs and rhs have the same datatype, checked in semantic analysis
+        switch (node.getUnaryType()) {
+            case not:
+            {
+                boolean invertedBooleanValue = !isBooleanTrue(innerValue);
+                return new Value(BuiltInType.boolType, invertedBooleanValue);
+            }
+            case minus:
+            {
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer internalValue = (Integer)innerValue.getInternalValue();
+                    Integer res = -internalValue;
+                    return new Value(BuiltInType.intType, res);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float internalValue = (Float) innerValue.getInternalValue();
+                    Float res = -internalValue;
+                    return new Value(BuiltInType.floatType, res);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for unary minus!");
+                }
+            }
+        }
+        return Value.NONE;
     }
 
     @Override
