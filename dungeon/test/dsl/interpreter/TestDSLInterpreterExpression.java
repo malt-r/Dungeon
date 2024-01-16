@@ -218,4 +218,31 @@ public void addInteger() {
         String output = outputStream.toString();
         Assert.assertTrue(output.contains("7.85"));
     }
+
+    @Test
+    public void unaryNot() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var b1 : bool;
+                    b1 = false;
+                    print(true == !b1);
+
+                    print(!(true == b1));
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals("true"+System.lineSeparator() + "true"+System.lineSeparator(), output);
+    }
 }
