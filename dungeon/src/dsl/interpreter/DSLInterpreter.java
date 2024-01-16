@@ -1204,8 +1204,16 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(LogicOrNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Value lhs = (Value)node.getLhs().accept(this);
+
+        // short-circuiting implementation
+        boolean lhsBool = isBooleanTrue(lhs);
+        if (lhsBool) {
+            return new Value(BuiltInType.boolType, true);
+        }
+
+        Value rhs = (Value)node.getRhs().accept(this);
+        return new Value(BuiltInType.boolType, isBooleanTrue(rhs));
     }
 
     @Override
