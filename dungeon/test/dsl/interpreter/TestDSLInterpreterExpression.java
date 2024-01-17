@@ -300,6 +300,146 @@ public void addInteger() {
     }
 
     @Test
+    public void comparisonLEQ() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var n1 : int;
+                    n1 = 42;
+                    var n2 : int;
+                    n2 = 32;
+                    print(n1 <= n1);
+                    print(n1 <= n2);
+                    print(n2 <= n1);
+                    print(n2 <= n2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "true"+System.lineSeparator() +
+            "false"+System.lineSeparator() +
+            "true"+System.lineSeparator() +
+            "true"+System.lineSeparator(),
+            output);
+    }
+
+    @Test
+    public void comparisonLT() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var n1 : int;
+                    n1 = 42;
+                    var n2 : int;
+                    n2 = 32;
+                    print(n1 < n1);
+                    print(n1 < n2);
+                    print(n2 < n1);
+                    print(n2 < n2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "false"+System.lineSeparator() +
+                "false"+System.lineSeparator() +
+                "true"+System.lineSeparator() +
+                "false"+System.lineSeparator(),
+            output);
+    }
+
+    @Test
+    public void comparisonGEQ() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var n1 : int;
+                    n1 = 42;
+                    var n2 : int;
+                    n2 = 32;
+                    print(n1 >= n1);
+                    print(n1 >= n2);
+                    print(n2 >= n1);
+                    print(n2 >= n2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "true"+System.lineSeparator() +
+                "true"+System.lineSeparator() +
+                "false"+System.lineSeparator() +
+                "true"+System.lineSeparator(),
+            output);
+    }
+
+    @Test
+    public void comparisonGT() {
+        String program =
+            testProgramPreamble +
+                """
+                fn build_task(single_choice_task t) -> entity<><> {
+                    var return_set : entity<><>;
+                    var room_set : entity<>;
+
+                    var n1 : int;
+                    n1 = 42;
+                    var n2 : int;
+                    n2 = 32;
+                    print(n1 > n1);
+                    print(n1 > n2);
+                    print(n2 > n1);
+                    print(n2 > n2);
+
+                    return_set.add(room_set);
+                    return return_set;
+                }
+                """;
+
+        var outputStream = new ByteArrayOutputStream();
+        Helpers.buildTask(program, outputStream);
+
+        String output = outputStream.toString();
+        Assert.assertEquals(
+            "false"+System.lineSeparator() +
+                "true"+System.lineSeparator() +
+                "false"+System.lineSeparator() +
+                "false"+System.lineSeparator(),
+            output);
+    }
+
+    @Test
     public void logicOr() {
         String program =
             testProgramPreamble +
