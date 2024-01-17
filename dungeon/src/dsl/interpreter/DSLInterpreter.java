@@ -1243,8 +1243,70 @@ public class DSLInterpreter implements AstVisitor<Object> {
 
     @Override
     public Object visit(ComparisonNode node) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Value lhs = (Value)node.getLhs().accept(this);
+        Value rhs = (Value)node.getRhs().accept(this);
+
+        assert lhs.getDataType() == rhs.getDataType();
+        IType valueType = lhs.getDataType();
+        switch (node.getComparisonType()) {
+            case lessThan:
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    boolean comp = lhsInt < rhsInt;
+                    return new Value(BuiltInType.boolType, comp);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    boolean comp = lhsFloat < rhsFloat;
+                    return new Value(BuiltInType.boolType, comp);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for comparison!");
+                }
+            case lessEquals:
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    boolean comp = lhsInt <= rhsInt;
+                    return new Value(BuiltInType.boolType, comp);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    boolean comp = lhsFloat <= rhsFloat;
+                    return new Value(BuiltInType.boolType, comp);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for comparison!");
+                }
+            case greaterThan:
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    boolean comp = lhsInt > rhsInt;
+                    return new Value(BuiltInType.boolType, comp);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    boolean comp = lhsFloat > rhsFloat;
+                    return new Value(BuiltInType.boolType, comp);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for comparison!");
+                }
+            case greaterEquals:
+                if (valueType.equals(BuiltInType.intType)) {
+                    Integer lhsInt = (Integer)lhs.getInternalValue();
+                    Integer rhsInt = (Integer)rhs.getInternalValue();
+                    boolean comp = lhsInt >= rhsInt;
+                    return new Value(BuiltInType.boolType, comp);
+                } else if (valueType.equals(BuiltInType.floatType)) {
+                    Float lhsFloat = (Float)lhs.getInternalValue();
+                    Float rhsFloat = (Float)rhs.getInternalValue();
+                    boolean comp = lhsFloat >= rhsFloat;
+                    return new Value(BuiltInType.boolType, comp);
+                } else {
+                    throw new RuntimeException("Invalid type '" + valueType +"' for comparison!");
+                }
+        }
+        return Value.NONE;
     }
 
     @Override
