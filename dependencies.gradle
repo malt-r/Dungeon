@@ -9,6 +9,7 @@ ext {
     junitVersion = '4.13.2'
     mockitoVersion = '5.10.0'
     antlrVersion = '4.13.1'
+    lsp4jVersion = '0.22.0'
     gsonVersion = '2.10.1'
 
     supportDependencies = [
@@ -30,5 +31,8 @@ ext {
 
         // ANTLR version 4 for DSL Grammar
         antlr                     : "org.antlr:antlr4:$antlrVersion",
+
+        // LSP4j for implementation of LSP-Server
+        lsp4j                     : "org.eclipse.lsp4j:org.eclipse.lsp4j:$lsp4jVersion",
     ]
 }

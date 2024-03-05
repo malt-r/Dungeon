@@ -9,6 +9,9 @@ dependencies {
 
     // ANTLR version 4 for DSL Grammar
     antlr supportDependencies.antlr
+
+    // LSP4J for implementation of LSP Server
+    lsp4j supportDependencies.lsp4j
 }
 
 
